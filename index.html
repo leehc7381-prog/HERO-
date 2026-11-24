@@ -176,6 +176,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <section class="card">
 <div class="step">3단계</div><h2>다시 도전하기</h2>
 <p class="muted" style="margin:0 0 8px">해설을 읽고 올바른 문장을 직접 다시 써 보세요.</p>
+<div id="retrySrc" class="gbox" hidden><div class="gh" id="retrySrcLabel" style="margin-top:0">📝 번역할 문장</div><div id="retrySrcText" style="font-weight:600;margin-top:2px"></div></div>
 <textarea id="retry" placeholder="올바른 영어 문장을 다시 입력"></textarea>
 <button id="recheck" disabled>다시 확인하기</button>
 <div id="reOut" class="res" style="margin-top:10px"></div>
@@ -207,7 +208,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 3.7</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 3.8</span><span>Made by 성원 아름</span></div>
 </main>
 
 <script>
@@ -523,6 +524,9 @@ function showExplain(){
   $("reveal").hidden = cur.revealed;
   showAnswer();
   renderQA();
+  $("retrySrc").hidden = false;
+  $("retrySrcLabel").textContent = ((cur.dir || "ko2en") === "en2ko") ? ("📝 해석할 " + L.name + " 문장") : "📝 번역할 한국어 문장";
+  $("retrySrcText").textContent = cur.ko;
   $("listenIdle").hidden = true;
   $("listenGenRow").hidden = false;
   $("speakRow").hidden = true;
@@ -626,7 +630,7 @@ $("check").onclick = async () => {
 };
 
 $("reveal").onclick = () => { if(!cur) return; cur.revealed = true; $("reveal").hidden = true; showAnswer(); saveCur(); };
-const clearAll = () => { cur = null; openedId = null; renderQA(); $("ansIdle").hidden = false; $("listenIdle").hidden = false; $("listenGenRow").hidden = true; $("speakRow").hidden = true; $("speakMsg").textContent = ""; if(window.speechSynthesis) speechSynthesis.cancel(); $("ko").value=""; $("en").value=""; $("retry").value=""; $("reOut").textContent=""; fitAllBoxes(); $("ansOut").replaceChildren(); $("reveal").hidden=true; $("recheck").disabled=true; $("exOut").className="muted"; $("exOut").textContent="검사하기를 누르면 여기에 해설이 나와요."; };
+const clearAll = () => { cur = null; openedId = null; renderQA(); $("ansIdle").hidden = false; $("listenIdle").hidden = false; $("listenGenRow").hidden = true; $("speakRow").hidden = true; $("speakMsg").textContent = ""; if(window.speechSynthesis) speechSynthesis.cancel(); $("ko").value=""; $("en").value=""; $("retry").value=""; $("reOut").textContent=""; $("retrySrc").hidden=true; $("retrySrcText").textContent=""; fitAllBoxes(); $("ansOut").replaceChildren(); $("reveal").hidden=true; $("recheck").disabled=true; $("exOut").className="muted"; $("exOut").textContent="검사하기를 누르면 여기에 해설이 나와요."; };
 
 /* ---- 질문란 ---- */
 function renderQA(){
