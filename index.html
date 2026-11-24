@@ -148,6 +148,21 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
     <option value="중급">중급</option>
     <option value="고급">고급</option>
   </select>
+</div>
+<div class="srow">
+  <span class="muted">🏷️ 주제</span>
+  <select id="topicSel" class="ctl" aria-label="주제 선택">
+    <option value="랜덤">랜덤</option>
+    <option value="일상생활">일상생활</option>
+    <option value="여행·교통">여행·교통</option>
+    <option value="음식·카페">음식·카페</option>
+    <option value="직장·비즈니스">직장·비즈니스</option>
+    <option value="쇼핑·결제">쇼핑·결제</option>
+    <option value="감정·관계">감정·관계</option>
+    <option value="취미·여가">취미·여가</option>
+    <option value="건강·병원">건강·병원</option>
+    <option value="시사·사회">시사·사회</option>
+  </select>
   <button id="genSent" type="button" class="ctl">✨ 문장 제시</button>
 </div>
 <div class="fb ko" id="srcBox"><label for="ko" id="srcLabel">🇰🇷 한국어 문장</label>
@@ -208,7 +223,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 3.8</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 4.0</span><span>Made by 성원 아름</span></div>
 </main>
 
 <script>
@@ -458,6 +473,8 @@ function ensureLevelFolder(lv){
   refreshSel();
   renderHist();
 }
+try{ const st = localStorage.getItem("app:topic"); if(st) $("topicSel").value = st; }catch(e){}
+$("topicSel").onchange = () => { try{ localStorage.setItem("app:topic", $("topicSel").value); }catch(e){} };
 $("lvlSel").onchange = () => {
   const lv = $("lvlSel").value;
   try{ localStorage.setItem(L.ek + ":lvl", lv); }catch(e){}
@@ -475,11 +492,14 @@ $("genSent").onclick = async () => {
   clearAll();
   const recent = load().slice(0, 5).map(x => x.ko).join(" / ");
   const guide = LVL_GUIDE[lv] || lv;
+  const topics = ["일상생활","여행·교통","음식·카페","직장·비즈니스","쇼핑·결제","감정·관계","취미·여가","건강·병원","시사·사회"];
+  const rawTopic = $("topicSel").value || "랜덤";
+  const pickedTopic = rawTopic === "랜덤" ? topics[Math.floor(Math.random() * topics.length)] : rawTopic;
   const lower = getLowerLearned(lv);
   const lowerNote = lower ? `하위 등급에서 이미 배운 내용(${lower})을 자연스럽게 응용·확장해서 포함하라.\n` : "";
   const genPrompt = dir === "en2ko"
-    ? `한국인 학습자가 한국어로 해석 연습을 할 수 있도록 반드시 ${L.name} 문장 1개만 작성하라(한국어나 설명 절대 포함 금지).\n난이도(${lv}): ${guide}\n${lowerNote}${recent ? "최근 문장과 겹치지 않게: " + recent + "\n" : ""}위 길이·어휘·문법 기준을 엄격히 지켜라. JSON으로만 답하라:\n{"sentence":"${L.name} 문장 1개"}`
-    : `한국인 학습자가 ${L.name}로 번역 연습을 할 수 있도록 반드시 순수 한국어 문장 1개만 작성하라(${L.name} 등 외국어나 번역을 절대 쓰지 마라).\n난이도(${lv}): ${guide} (한국어 문장 자체의 어휘·구조·길이도 이 난이도에 맞추되, 번역했을 때 위 기준이 나오도록 구성하라)\n${lowerNote}${recent ? "최근 문장과 겹치지 않게: " + recent + "\n" : ""}JSON으로만 답하라:\n{"sentence":"순수 한국어 문장 1개"}`;
+    ? `한국인 학습자가 한국어로 해석 연습을 할 수 있도록 반드시 ${L.name} 문장 1개만 작성하라(한국어나 설명 절대 포함 금지).\n난이도(${lv}): ${guide}\n주제(${pickedTopic}): 반드시 이 주제 상황에 어울리는 자연스러운 문장으로 작성하라.\n${lowerNote}${recent ? "최근 문장과 겹치지 않게: " + recent + "\n" : ""}위 길이·어휘·문법 기준을 엄격히 지켜라. JSON으로만 답하라:\n{"sentence":"${L.name} 문장 1개"}`
+    : `한국인 학습자가 ${L.name}로 번역 연습을 할 수 있도록 반드시 순수 한국어 문장 1개만 작성하라(${L.name} 등 외국어나 번역을 절대 쓰지 마라).\n난이도(${lv}): ${guide} (한국어 문장 자체의 어휘·구조·길이도 이 난이도에 맞추되, 번역했을 때 위 기준이 나오도록 구성하라)\n주제(${pickedTopic}): 반드시 이 주제 상황에 어울리는 자연스러운 문장으로 작성하라.\n${lowerNote}${recent ? "최근 문장과 겹치지 않게: " + recent + "\n" : ""}JSON으로만 답하라:\n{"sentence":"순수 한국어 문장 1개"}`;
   try{
     const r = await sample.json(genPrompt);
     if(r && r.sentence){ $("ko").value = r.sentence.trim(); fitBox($("ko")); $("en").focus(); }
