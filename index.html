@@ -1,0 +1,677 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>HERO</title>
+<meta name="theme-color" content="#f6f5f1" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#171614" media="(prefers-color-scheme: dark)">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="HERO">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="icon" href="icon-192.png">
+<style>
+:root{color-scheme:light dark;--bg:#f6f5f1;--card:#fff;--ink:#1f1d1a;--sub:#6b665e;--line:#e4e0d8;--acc:#2f6fed;--accink:#fff;--ok:#1d8a4e;--bad:#c4382f;--hl:#eef3ff;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#171614;--card:#222120;--ink:#f1eee8;--sub:#a49e94;--line:#34322f;--acc:#6f9bff;--accink:#10131a;--ok:#4cc585;--bad:#ff7d73;--hl:#232b3d;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#171614;--card:#222120;--ink:#f1eee8;--sub:#a49e94;--line:#34322f;--acc:#6f9bff;--accink:#10131a;--ok:#4cc585;--bad:#ff7d73;--hl:#232b3d;color-scheme:dark}
+*{box-sizing:border-box}
+html,body{margin:0;min-height:100%;background:var(--bg);color:var(--ink);font:16px/1.6 -apple-system,"Apple SD Gothic Neo","Noto Sans KR",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:20px 16px 84px}
+h1{font-size:22px;margin:4px 0 2px}
+.lead{color:var(--sub);font-size:14px;margin:0 0 18px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px;margin-bottom:14px}
+.step{font-size:12px;font-weight:700;color:var(--acc);letter-spacing:.04em}
+h2{font-size:16px;margin:2px 0 8px}
+textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;background:var(--bg);color:var(--ink)}
+textarea{min-height:76px;resize:vertical}
+textarea:focus,input:focus{outline:2px solid var(--acc)}
+button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:var(--acc);color:var(--accink);cursor:pointer;margin:8px 8px 0 0}
+button.ghost{background:transparent;color:var(--acc);border:1px solid var(--line)}
+button.sm{padding:6px 10px;font-size:13px;margin:6px 6px 0 0}
+button:disabled{opacity:.5;cursor:default}
+.res{white-space:pre-wrap}
+.tag{display:inline-block;font-size:12px;font-weight:700;padding:2px 8px;border-radius:99px;margin-bottom:6px}
+.tag.ok{background:color-mix(in srgb,var(--ok) 18%,transparent);color:var(--ok)}
+.tag.bad{background:color-mix(in srgb,var(--bad) 18%,transparent);color:var(--bad)}
+.fix{background:var(--hl);border-radius:10px;padding:10px 12px;margin:6px 0 10px;font-weight:600}
+.sec{font-size:13px;font-weight:700;color:var(--sub);margin:12px 0 4px}
+ul,ol{margin:0;padding-left:20px}
+li{margin-bottom:4px}
+.muted{color:var(--sub);font-size:14px}
+.row{border-top:1px solid var(--line);padding:10px 0}
+.row:first-child{border-top:0}
+.row .k{font-weight:600}
+.row .e{color:var(--sub);font-size:14px}
+.badge{font-size:11px;font-weight:700;margin-left:6px;color:var(--sub)}
+.badge.ok{color:var(--ok)}
+.gbox{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin:6px 0}
+.gname{font-weight:700;color:var(--acc)}
+.gh{font-size:13px;font-weight:700;color:var(--sub);margin-top:8px}
+.qm{padding:8px 12px;border-radius:10px;margin:6px 0;white-space:pre-wrap}
+.qm.me{background:var(--hl);margin-left:24px}
+.qm.ai{background:var(--bg);border:1px solid var(--line);margin-right:24px}
+.box summary{list-style:none;cursor:pointer;display:flex;justify-content:space-between;align-items:center;font-weight:700;font-size:16px}
+.box summary::-webkit-details-marker{display:none}
+.box summary::after{content:"▾";color:var(--sub);transition:transform .2s}
+.box[open] summary::after{transform:rotate(180deg)}
+.box #hist{margin-top:10px}
+.cnt{margin-left:6px;background:var(--hl);color:var(--acc);border-radius:99px;padding:0 9px;font-size:13px}
+.fold{border:1px solid var(--line);border-radius:10px;margin:6px 0;padding:8px 10px}
+.fold>summary{cursor:pointer;display:flex;align-items:center;gap:6px}
+.srow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0}
+.srow input[type=text]{flex:1 1 100%}
+.srow select{font:inherit;font-size:13px;padding:5px;border-radius:8px;border:1px solid var(--line);background:var(--bg);color:var(--ink)}
+.srow button{margin:0}
+.imp summary{cursor:pointer;color:var(--acc);font-weight:600;margin-top:12px}
+.imp textarea,.imp input{margin-top:8px}
+.fb{border-left:4px solid var(--line);padding-left:10px;margin:12px 0}
+.fb.ko{border-color:#e0a32e}
+.fb.en{border-color:var(--acc)}
+.fb label{display:block;font-size:13px;font-weight:700;color:var(--sub);margin-bottom:4px}
+.fb.en textarea{font-size:17px}
+.dcard{padding:10px 12px}
+.dsearch{display:flex;gap:6px;align-items:center}
+.dl{font-size:14px;font-weight:700;white-space:nowrap}
+.dsearch input{flex:1;min-width:0;padding:6px 10px;font-size:14px}
+.dsearch button{margin:0;padding:6px 12px;font-size:13px}
+#dictOut{margin-top:8px}
+#dictOut:empty{display:none}
+.dh{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+.dh b{font-size:15px}.dh .muted{font-size:12px}
+.dm{font-size:14px;margin-top:2px}
+.dx{font-size:12.5px;color:var(--sub);margin-top:3px}
+details.row>summary{cursor:pointer}
+.srow .ctl{height:34px;padding:0 12px;font:inherit;font-size:13px;font-weight:600;line-height:1;border:1px solid var(--line);border-radius:10px;background:var(--card);color:var(--acc);cursor:pointer;margin:0}
+.srow .ctl:disabled{opacity:.45;cursor:default}
+.srow select.ctl{appearance:none;-webkit-appearance:none;padding-right:28px;background-image:linear-gradient(45deg,transparent 50%,currentColor 50%),linear-gradient(135deg,currentColor 50%,transparent 50%);background-position:calc(100% - 16px) 14px,calc(100% - 11px) 14px;background-size:5px 5px;background-repeat:no-repeat}
+.fline{display:flex;gap:6px;align-items:center;margin-top:10px}
+[hidden]{display:none!important}
+.fline input,.fline select{flex:1;min-width:0;height:34px;padding:0 10px;font-size:13px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink)}
+.fline button{flex:none;margin:0;height:34px;padding:0 12px;font-size:13px;white-space:nowrap}
+.top{display:flex;justify-content:space-between;align-items:center;gap:8px}
+.lang{font:inherit;font-size:12px;padding:3px 6px;border-radius:8px;border:1px solid var(--line);background:var(--card);color:var(--ink)}
+.topr{display:flex;gap:6px;align-items:center}
+button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);border:1px solid var(--line)}
+.ver{display:flex;justify-content:space-between;align-items:center;font-size:11px;color:var(--sub);margin-top:4px}
+.subbox{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:10px 12px;margin-top:8px}
+.subhead{font-size:13px;font-weight:700;color:var(--sub);margin-bottom:6px}
+.cbtn{display:inline-flex;align-items:center;gap:6px;flex-wrap:wrap}
+.cbtn button{margin:0;padding:5px 10px;font-size:12.5px;border-radius:8px}
+.line{display:flex;gap:8px}
+.line button{margin:0}
+</style>
+</head>
+<body>
+<main>
+<div class="top"><h1 id="ttl">영어 문장 학습</h1><div class="topr"><select id="langSel" class="lang"><option value="en">🇺🇸 영어</option><option value="es">🇪🇸 스페인어</option><option value="ja">🇯🇵 일본어</option><option value="zh">🇨🇳 중국어(간체)</option></select><button id="gearBtn" class="lang" title="AI 키 설정">🔑</button></div></div>
+<p class="lead" id="lead">한국어 문장을 적고 영어로 번역해 보세요. 정답은 바로 알려드리지 않고, 스스로 찾도록 안내해 드릴게요.</p>
+<p class="muted" style="font-size:12.5px;margin:-10px 0 14px">🔑 처음 사용 시 우측 상단 열쇠 버튼을 눌러 API 키를 등록해 주세요.</p>
+
+<section class="card" id="setBox" hidden>
+<div class="top" style="margin-bottom:6px">
+  <div><b>🔑 AI 연결 (Groq 키)</b> <span id="keyState" class="muted"></span></div>
+  <button id="setClose" class="ghost sm" style="margin:0" title="닫기">✕</button>
+</div>
+<ol class="muted" style="margin:10px 0 8px;font-size:13px">
+<li><a href="https://console.groq.com/keys" target="_blank" rel="noopener">Groq Console</a>에 구글 계정 등으로 로그인해요.</li>
+<li>“Create API Key” 버튼을 눌러요.</li>
+<li>만들어진 키(gsk_로 시작하는 글자 묶음)를 복사해요.</li>
+<li>아래 칸에 붙여넣고 “저장”을 눌러요.</li>
+</ol>
+<div class="fline"><input type="password" id="keyIn" placeholder="Groq API 키 붙여넣기 (gsk_...)" autocomplete="off"><button id="keySave">저장</button></div>
+<div class="fline">
+  <select id="modelSel" aria-label="Groq 언어 모델 선택">
+    <option value="openai/gpt-oss-120b" selected>GPT-OSS 120B (기본 · 고성능)</option>
+    <option value="openai/gpt-oss-20b">GPT-OSS 20B (빠름)</option>
+    <option value="qwen/qwen3.8-27b">Qwen 3.8 27B (한국어 강점)</option>
+  </select>
+  <button id="keyClear" class="ghost">지우기</button>
+</div>
+<div id="keyMsg" class="muted" style="margin-top:6px;font-size:13px"></div>
+<div class="muted" style="margin-top:6px;font-size:12px">키는 이 기기의 브라우저에만 저장돼요. 다른 사람에게 알려 주지 마세요.</div>
+</section>
+
+<section class="card">
+<div class="step">1단계</div><h2>문장 쓰고 번역하기</h2>
+<div class="srow" style="justify-content:space-between">
+  <div class="cbtn"><span class="muted">📁 폴더</span><select id="fsel"></select></div>
+  <button id="dirBtn" type="button" class="ctl" title="한국어와 외국어 입력 방향 바꾸기">한국어 ↔ 영어</button>
+</div>
+<div class="fb ko" id="srcBox"><label for="ko" id="srcLabel">🇰🇷 한국어 문장</label>
+<textarea id="ko" placeholder="예) 나는 어제 친구와 함께 영화를 봤어."></textarea></div>
+<div class="fb en" id="enBox"><label for="en" id="enLabel">🇺🇸 내 영어 번역</label>
+<textarea id="en" placeholder="예) I watched a movie with my friend yesterday."></textarea></div>
+<button id="check">검사하고 해설 받기</button>
+</section>
+
+<section class="card dcard">
+<div class="dsearch"><span class="dl">🔎 단어찾기</span><input type="text" id="word" placeholder="영어 또는 한국어"><button id="lookup">검색</button></div>
+<div id="dictOut"></div>
+</section>
+
+<section class="card">
+<div class="step">2단계</div><h2>해설과 질문</h2>
+<div id="exOut" class="muted">검사하기를 누르면 여기에 해설이 나와요.</div>
+<div style="border-top:1px solid var(--line);margin:16px 0 10px"></div>
+<h2>💬 궁금한 점 질문하기</h2>
+<p class="muted" style="margin:0 0 8px">해설을 읽다가 이해가 안 되는 부분이나 궁금한 점을 자유롭게 물어보세요.</p>
+<div id="qaLog"></div>
+<textarea id="qa" placeholder="예) 왜 watch 뒤에 ed를 붙여요? / with와 and는 뭐가 달라요?"></textarea>
+<button id="askBtn">질문하기</button>
+</section>
+
+<section class="card">
+<div class="step">3단계</div><h2>다시 도전하기</h2>
+<p class="muted" style="margin:0 0 8px">해설을 읽고 올바른 문장을 직접 다시 써 보세요.</p>
+<textarea id="retry" placeholder="올바른 영어 문장을 다시 입력"></textarea>
+<button id="recheck" disabled>다시 확인하기</button>
+<div id="reOut" class="res" style="margin-top:10px"></div>
+</section>
+
+<section class="card" id="stage4">
+<div class="step">4단계</div><h2>정답 확인 및 듣기</h2>
+<div class="subbox">
+  <div class="subhead">📝 정답 확인</div>
+  <div id="ansIdle" class="muted">문장을 검사한 뒤 원할 때 정답을 확인할 수 있어요.</div>
+  <button id="reveal" class="ghost sm" style="margin:0" hidden>정답 확인하기</button>
+  <div id="ansOut" class="res"></div>
+</div>
+<div class="subbox">
+  <div class="subhead">🔊 정답 듣기</div>
+  <div id="listenIdle" class="muted">문장을 검사한 뒤 원할 때 듣기 버튼을 생성할 수 있어요.</div>
+  <div id="listenGenRow" hidden><button id="genSpeak" class="ghost sm" style="margin:0">🎧 듣기 생성하기</button></div>
+  <div id="speakRow" class="cbtn" hidden><button id="speak" class="ghost">▶ 재생</button><button id="speakStop" class="ghost">⏹ 멈춤</button></div>
+  <div id="speakMsg" class="muted" style="margin-top:6px"></div>
+</div>
+</section>
+
+<button id="newStudy" style="width:100%;margin:0 0 14px;padding:14px">✏️ 새 문장 학습하기</button>
+
+<details class="card box" id="box">
+<summary><span>🗄️ 학습 보관함<span class="cnt" id="cnt">0</span></span></summary>
+<div id="hist" class="muted">아직 저장된 기록이 없어요. 검사하면 자동으로 저장돼요.</div>
+<div class="fline"><input type="text" id="newFolder" placeholder="새 폴더 이름"><button id="addFolder">폴더 만들기</button></div>
+<p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
+</details>
+
+<div class="ver"><span>Version 3.1</span><span>Made by 성원</span></div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const LANGS = {
+  en:{name:"영어", flag:"🇺🇸", tts:"en-US", vre:/^en[-_]US/i, pref:/Google US|Samantha|Ava|Allison|Aria|Jenny|Natural/i, ph:"예) I watched a movie with my friend yesterday.", qa:"예) 왜 watch 뒤에 ed를 붙여요? / with와 and는 뭐가 달라요?", ex:"I — 누가 했는지 말하는 부분", note:"", pron:"발음기호 또는 한글 발음", reading:false, ek:"es"},
+  es:{name:"스페인어", flag:"🇪🇸", tts:"es-ES", vre:/^es/i, pref:/Google español|Monica|Mónica|Paulina|Jorge|Natural/i, ph:"예) Ayer vi una película con mi amigo.", qa:"예) 왜 ver가 vi로 바뀌어요? / ser와 estar는 뭐가 달라요?", ex:"Yo — 누가 했는지 말하는 부분", note:"스페인어는 명사의 성(남성·여성)과 수 일치, 동사 활용, 주어 생략, 문장 부호(¿ ¡)를 쉽게 풀어 설명한다. ", pron:"한글 발음", reading:false, ek:"sp"},
+  ja:{name:"일본어", flag:"🇯🇵", tts:"ja-JP", vre:/^ja/i, pref:/Kyoko|O-Ren|Hattori|Otoya|Google 日本語|Natural/i, ph:"예) 私は昨日友達と映画を見ました。", qa:"예) 왜 を를 써요? / は와 が는 뭐가 달라요?", ex:"私は — 누가 했는지 말하는 부분", note:"일본어는 조사(は, が, を, に 등), 동사와 형용사의 활용, です·ます체와 반말의 차이를 쉽게 풀어 설명하고, 한자에는 읽는 법을 함께 알려준다. ", pron:"히라가나 읽기와 한글 발음", reading:true, readingLabel:"정답 문장 전체의 히라가나 읽기와 한글 발음(한 줄)", ek:"ja"},
+  zh:{name:"중국어(간체)", flag:"🇨🇳", tts:"zh-CN", vre:/^zh([-_]?(CN|Hans|SG))?$/i, pref:/Ting-Ting|Tingting|Google 普通话|Xiaoxiao|Yunxi|Natural/i, ph:"예) 我昨天和朋友一起看了电影。", qa:"예) 왜 了를 써요? / 和와 跟은 뭐가 달라요?", ex:"我 — 누가 했는지 말하는 부분", note:"중국어(간체)는 반드시 간체자(简体字)로만 작성하고, 어순(주어·시간·장소·동사·목적어), 了·过·着 같은 표현, 양사, 성조·병음을 쉽게 풀어 설명한다. ", pron:"병음(Pinyin)과 한글 발음", reading:true, readingLabel:"정답 문장 전체의 병음(Pinyin)과 한글 발음(한 줄)", ek:"zh"}
+};
+let L = LANGS.en, dir = "ko2en";
+try{ if(localStorage.getItem("app:dir") === "en2ko") dir = "en2ko"; }catch(e){}
+const fill = s => s.split("영어").join(L.name).replace("{NOTE}", L.note).replace("{EX}", L.ex).replace("{PRON}", L.pron).replace("{READING}", L.reading ? '\n"reading": "' + L.readingLabel + '",' : "");
+let sample = null, cur = null, openedId = null;
+/* ---- Groq ---- */
+const GK = "groq:key", GM = "groq:model", GBASE = "https://api.groq.com/openai/v1/";
+const DEFAULT_MODEL = "openai/gpt-oss-120b";
+const ALL_MODELS = ["openai/gpt-oss-120b", "openai/gpt-oss-20b", "qwen/qwen3.8-27b"];
+const PRESET_MODELS = new Set(ALL_MODELS);
+let apiKey = "", model = DEFAULT_MODEL, tIdx = 0;
+try{
+  apiKey = localStorage.getItem(GK) || "";
+  const savedM = localStorage.getItem(GM) || "";
+  model = PRESET_MODELS.has(savedM) ? savedM : DEFAULT_MODEL;
+}catch(e){}
+function keyMsg(t, bad){ $("keyMsg").textContent = t; $("keyMsg").style.color = bad ? "var(--bad)" : ""; }
+function refreshKeyUI(){
+  $("keyState").textContent = apiKey ? "✓ 연결됨 · " + model : "· 키가 필요해요";
+  $("keyIn").value = "";
+  if(!PRESET_MODELS.has(model)) model = DEFAULT_MODEL;
+  $("modelSel").value = model;
+}
+async function verifyKey(){
+  const res = await fetch(GBASE + "models", {headers:{"Authorization":"Bearer " + apiKey}});
+  if(!res.ok) throw new Error(res.status);
+}
+async function callGroq(prompt, onStream, onStatus){
+  if(!apiKey){ $("setBox").hidden = false; $("setBox").scrollIntoView({behavior:"smooth", block:"center"}); keyMsg("먼저 Groq API 키를 입력하고 저장해 주세요.", true); throw new Error("nokey"); }
+  if(!PRESET_MODELS.has(model)){ model = DEFAULT_MODEL; refreshKeyUI(); }
+  const post = (m, extra, signal) => fetch(GBASE + "chat/completions", {
+    method:"POST", signal,
+    headers:{"Content-Type":"application/json", "Authorization":"Bearer " + apiKey},
+    body: JSON.stringify(Object.assign({
+      model: m,
+      messages: [{role:"user", content:prompt}],
+      response_format: {type:"json_object"},
+      stream: !!onStream
+    }, extra))
+  });
+  const cfgs = [{reasoning_effort:"low"}, {}];
+  const tryModels = [model, ...ALL_MODELS.filter(m => m !== model)];
+  let res = null, lastErr = null;
+  for(let mi = 0; mi < tryModels.length; mi++){
+    const m = tryModels[mi];
+    if(onStatus) onStatus(mi === 0 ? `해설을 만들고 있어요… (${m})` : `응답 지연/오류로 다음 모델 시도 중… (${m})`);
+    const ac = new AbortController();
+    const timer = setTimeout(() => ac.abort(), 25000);
+    try{
+      res = null;
+      for(let k = 0; k < cfgs.length; k++){
+        res = await post(m, cfgs[k], ac.signal);
+        if(res.ok) break;
+        if(res.status !== 400) break;
+      }
+      if(!res || !res.ok){
+        clearTimeout(timer);
+        if(res && (res.status === 401 || res.status === 403)) break;
+        continue;
+      }
+      if(onStream && res.body){
+        const reader = res.body.getReader(), dec = new TextDecoder();
+        let buf = "", full = "";
+        while(true){
+          const {value, done} = await reader.read();
+          if(done) break;
+          buf += dec.decode(value, {stream:true});
+          const lines = buf.split("\n");
+          buf = lines.pop() || "";
+          for(const line of lines){
+            if(!line.startsWith("data:")) continue;
+            const raw = line.slice(5).trim();
+            if(!raw || raw === "[DONE]") continue;
+            try{
+              const d = JSON.parse(raw);
+              const chunk = (d.choices && d.choices[0] && d.choices[0].delta && d.choices[0].delta.content) || "";
+              if(chunk){ full += chunk; onStream(full); }
+            }catch(e){}
+          }
+        }
+        clearTimeout(timer);
+        return JSON.parse(full.replace(/```json|```/g, "").trim());
+      }
+      const d = await res.json();
+      clearTimeout(timer);
+      const txt = (d.choices && d.choices[0] && d.choices[0].message && d.choices[0].message.content) || "";
+      return JSON.parse(txt.replace(/```json|```/g, "").trim());
+    }catch(e){
+      clearTimeout(timer);
+      lastErr = e;
+      res = null;
+    }
+  }
+  if(!res){
+    const msg = (lastErr && lastErr.name === "AbortError") ? "timeout" : "network";
+    keyMsg(msg === "timeout" ? "서버 응답 시간이 초과됐어요(15초). 잠시 후 다시 시도해 주세요." : "네트워크 연결을 확인해 주세요.", true);
+    throw new Error(msg);
+  }
+  const msg = {400:"요청 형식이나 키를 확인해 주세요.", 401:"Groq API 키가 올바르지 않아요.", 403:"이 키로는 사용할 수 없어요. 키와 계정을 확인해 주세요.", 404:"모델 이름을 확인해 주세요.", 429:"무료 사용 한도를 넘었어요. 잠시 뒤 다시 해 보세요.", 503:"Groq 서버가 일시적으로 혼잡해요. 잠시 후 다시 시도해 주세요."};
+  keyMsg(msg[res.status] || ("오류가 났어요 (" + res.status + ")"), true);
+  if(res.status !== 503 && res.status !== 429) $("setBox").hidden = false;
+  throw new Error(res.status);
+}
+sample = {json: callGroq};
+$("modelSel").onchange = () => {
+  model = $("modelSel").value || DEFAULT_MODEL; tIdx = 0;
+  try{ localStorage.setItem(GM, model); localStorage.setItem("g:t", "0"); }catch(e){}
+  refreshKeyUI();
+  if(apiKey) keyMsg("사용 모델이 변경됐어요: " + model);
+};
+$("keySave").onclick = async () => {
+  const k = $("keyIn").value.trim() || apiKey;
+  if(!k){ keyMsg("키를 붙여넣어 주세요.", true); return; }
+  apiKey = k; keyMsg("연결 확인 중…");
+  try{
+    await verifyKey();
+    model = $("modelSel").value || DEFAULT_MODEL; tIdx = 0;
+    try{ localStorage.setItem(GK, apiKey); localStorage.setItem(GM, model); localStorage.setItem("g:t", "0"); }catch(e){}
+    refreshKeyUI(); keyMsg("✓ 연결됐어요. 사용 모델: " + model);
+  }catch(e){ keyMsg("키를 확인하지 못했어요. 키가 맞는지, 인터넷이 연결됐는지 확인해 주세요.", true); }
+};
+$("keyClear").onclick = () => { apiKey = ""; model = DEFAULT_MODEL; tIdx = 0; try{ localStorage.removeItem(GK); localStorage.removeItem(GM); localStorage.removeItem("g:t"); }catch(e){} refreshKeyUI(); keyMsg("키를 지웠어요."); };
+$("gearBtn").onclick = () => { $("setBox").hidden = !$("setBox").hidden; if(!$("setBox").hidden) $("setBox").scrollIntoView({behavior:"smooth", block:"start"}); };
+$("setClose").onclick = () => { $("setBox").hidden = true; };
+refreshKeyUI();
+
+const SYS = "너는 원어민이 일상생활에서 실제로 쓰는 자연스러운 표현을 가르치는 친절한 영어 선생님이다. 단어 대 단어 직역(예: 따라 부르다를 follow the songs로 옮기는 것)은 절대 하지 말고, 원어민이 흔히 쓰는 자연스러운 동사·전치사·어순을 기준으로 지도한다. 설명은 군더더기 없이 쉬운 한국어로 쓰고, 어려운 문법 용어(예: 관계대명사, 분사구문)는 일상적인 말로 풀어 쓴다. {NOTE}영어 예문은 쉬운 단어로 쓴다. 반드시 JSON만 출력하고 마크다운 코드블록은 쓰지 않는다.";
+const ask = p => sample.json(fill(SYS + "\n\n" + p));
+function el(t, text, cls){ const e=document.createElement(t); if(text!=null) e.textContent=text; if(cls) e.className=cls; return e; }
+function list(items){ const u=el("ul"); (items||[]).forEach(t=>u.appendChild(el("li",t))); return u; }
+function olist(items){ const u=el("ol"); (items||[]).forEach(t=>u.appendChild(el("li",t))); return u; }
+
+/* ---- 저장 ---- */
+let KEY = "es:entries";
+function load(){ try{ return JSON.parse(localStorage.getItem(KEY)) || []; }catch(e){ return []; } }
+function persist(list){ try{ localStorage.setItem(KEY, JSON.stringify(list.slice(0,100))); }catch(e){} }
+function saveCur(){
+  if(!cur) return;
+  const all = load().filter(x => x.id !== cur.id);
+  all.unshift(cur); persist(all); renderHist();
+}
+let FK = "es:folders"; const BASE = {id:"base", name:"기본"};
+const loadFolders = () => { try{ const a = JSON.parse(localStorage.getItem(FK)); return a && a.length ? a : [BASE]; }catch(e){ return [BASE]; } };
+let folders = [BASE];
+let curSel = "base"; const openIds = new Set(), pageOf = {};
+const uid = () => Math.random().toString(36).slice(2, 9);
+function mk(tag, props){ const e = document.createElement(tag); Object.assign(e, props || {}); return e; }
+function saveFolders(){ try{ localStorage.setItem(FK, JSON.stringify(folders)); }catch(e){} }
+function refreshSel(){
+  const s = $("fsel"); if(!s) return; s.replaceChildren();
+  folders.forEach(f => s.appendChild(mk("option", {value:f.id, textContent:f.name})));
+  if(!folders.some(f => f.id === curSel)) curSel = "base"; s.value = curSel;
+}
+function renderHist(){
+  const all = load(), box = $("hist"); $("cnt").textContent = all.length;
+  box.replaceChildren(); box.className = ""; refreshSel();
+  folders.forEach(f => {
+    const items = all.filter(x => (x.fid || "base") === f.id);
+    const d = mk("details", {className:"fold"}); d.open = openIds.has(f.id);
+    d.addEventListener("toggle", () => { d.open ? openIds.add(f.id) : openIds.delete(f.id); });
+    const sm = el("summary"); sm.appendChild(el("b", f.name));
+    sm.appendChild(el("span", items.filter(x => x.solved).length + "/" + items.length, "cnt")); d.appendChild(sm);
+    const t = el("div", null, "srow");
+    const ni = mk("input", {type:"text", value:f.name}); ni.onchange = () => { f.name = ni.value.trim() || f.name; saveFolders(); renderHist(); };
+    t.appendChild(ni);
+    if(f.id !== "base"){
+      const df = el("button","폴더 삭제","ctl");
+      df.onclick = () => {
+        if(items.length && !df.dataset.s){ df.dataset.s = 1; df.textContent = "기록은 기본 폴더로 옮겨져요. 삭제할까요?"; return; }
+        persist(all.map(x => x.fid === f.id ? Object.assign(x, {fid:"base"}) : x)); folders = folders.filter(x => x !== f); saveFolders(); renderHist();
+      };
+      t.appendChild(df);
+    }
+    d.appendChild(t);
+    if(!items.length) d.appendChild(el("div","비어 있어요.","muted"));
+    const PER = 10, pages = Math.max(1, Math.ceil(items.length / PER));
+    const pg = Math.min(pageOf[f.id] || 0, pages - 1); pageOf[f.id] = pg;
+    items.slice(pg * PER, pg * PER + PER).forEach(x => {
+      const r = mk("details", {className:"row"});
+      const k = el("summary", x.ko, "k");
+      k.appendChild(el("span", x.solved ? "✓ 해결" : (x.revealed ? "정답 확인" : "공부 중"), "badge" + (x.solved ? " ok" : ""))); r.appendChild(k);
+      if(x.revealed) r.appendChild(el("div", "정답: " + x.r.corrected, "e"));
+      r.appendChild(el("div", new Date(x.t).toLocaleDateString("ko-KR"), "e"));
+      const br = el("div", null, "srow");
+      const o = el("button","다시 보기","ctl"); o.onclick = () => openEntry(x);
+      const mv = mk("select", {className:"ctl"}); mv.appendChild(mk("option", {value:"", textContent:"폴더 이동"}));
+      folders.filter(y => y.id !== f.id).forEach(y => mv.appendChild(mk("option", {value:y.id, textContent:y.name})));
+      mv.onchange = () => { if(!mv.value) return; x.fid = mv.value; if(cur && cur.id === x.id) cur.fid = x.fid; persist(all); renderHist(); };
+      const dl = el("button","삭제","ctl"); dl.onclick = () => { persist(load().filter(y => y.id !== x.id)); renderHist(); };
+      br.append(o, mv, dl); r.appendChild(br); d.appendChild(r);
+    });
+    if(pages > 1){
+      const nv = el("div", null, "srow"); nv.style.justifyContent = "center";
+      const pv = el("button","‹ 이전","ctl"); pv.disabled = pg === 0; pv.onclick = () => { pageOf[f.id] = pg - 1; renderHist(); };
+      const nx = el("button","다음 ›","ctl"); nx.disabled = pg >= pages - 1; nx.onclick = () => { pageOf[f.id] = pg + 1; renderHist(); };
+      nv.append(pv, el("span", (pg + 1) + " / " + pages, "muted"), nx); d.appendChild(nv);
+    }
+    box.appendChild(d);
+  });
+}
+$("addFolder").onclick = () => {
+  const f = {id:uid(), name:$("newFolder").value.trim() || "새 폴더"};
+  folders.push(f); openIds.add(f.id); $("newFolder").value = ""; saveFolders(); renderHist();
+};
+$("fsel").onchange = () => { curSel = $("fsel").value; };
+
+/* ---- 해설 표시 ---- */
+function showExplain(){
+  const r = cur.r, out = $("exOut"); out.className = "res"; out.replaceChildren();
+  out.appendChild(el("span", r.correct ? "정확해요 👍" : "고칠 부분이 있어요", "tag " + (r.correct ? "ok" : "bad")));
+  out.appendChild(el("div","① 같이 하나씩 살펴볼까요?","sec"));
+  if(r.steps && r.steps.length){
+    r.steps.forEach((st,i) => {
+      const b = el("div",null,"gbox");
+      b.appendChild(el("div",(i+1)+". "+st.part,"gname"));
+      if(st.check) b.appendChild(el("div",st.check));
+      if(st.hint) b.appendChild(el("div","💡 "+st.hint));
+      if(st.question) b.appendChild(el("div","👉 "+st.question,"muted"));
+      out.appendChild(b);
+    });
+  } else {
+    const hints = [].concat(r.diagnosis||[], r.questions||[]);
+    out.appendChild(hints.length ? list(hints) : el("div","고칠 부분 없이 잘 썼어요! 아래 핵심 문법을 확인해 보세요."));
+  }
+  out.appendChild(el("div","② 문법 배우기","sec"));
+  (r.grammar||[]).forEach((g,i) => {
+    if(typeof g === "string"){ out.appendChild(list([g])); return; }
+    const b = el("div",null,"gbox");
+    b.appendChild(el("div", (i+1)+". "+g.name, "gname"));
+    if(g.summary) b.appendChild(el("div", g.summary));
+    [["💡 왜 만들어졌을까요?", g.why],["⏰ 언제 쓰나요?", g.when],["🔧 어떻게 쓰나요?", g.how]].forEach(([h,t]) => { if(t){ b.appendChild(el("div",h,"gh")); b.appendChild(el("div",t)); } });
+    if(g.example){ b.appendChild(el("div","📝 예문","gh")); b.appendChild(el("div", g.example.en)); b.appendChild(el("div", g.example.ko, "muted")); }
+    out.appendChild(b);
+  });
+  $("ansIdle").hidden = true;
+  if(r.correct && !cur.revealed) cur.revealed = true;
+  $("reveal").hidden = cur.revealed;
+  showAnswer();
+  renderQA();
+  $("listenIdle").hidden = true;
+  $("listenGenRow").hidden = false;
+  $("speakRow").hidden = true;
+  $("speakMsg").textContent = "";
+  $("recheck").disabled = false;
+}
+function showAnswer(){
+  const a = $("ansOut"); a.replaceChildren();
+  if(!cur.revealed) return;
+  a.appendChild(el("div","정답","sec")); a.appendChild(el("div", cur.r.corrected, "fix")); if(cur.r.reading) a.appendChild(el("div", cur.r.reading, "muted"));
+  if(cur.r.why && cur.r.why.length){ a.appendChild(el("div","이렇게 고친 이유","sec")); a.appendChild(olist(cur.r.why)); }
+}
+function openEntry(x){
+  cur = x; openedId = x.id; curSel = x.fid || "base"; refreshSel();
+  applyDir(x.dir || "ko2en", false);
+  $("ko").value = x.ko; $("en").value = x.en; $("retry").value = ""; $("reOut").textContent = "";
+  showExplain(); window.scrollTo({top:0,behavior:"smooth"});
+}
+
+/* ---- 검사 ---- */
+$("check").onclick = async () => {
+  const ko = $("ko").value.trim(), en = $("en").value.trim();
+  if(!ko || !en){ $("exOut").textContent = fill("한국어 문장과 영어 번역을 모두 입력해 주세요."); return; }
+  if(!sample) return;
+  $("check").disabled = true; $("exOut").className="muted"; $("exOut").textContent = "해설을 만들고 있어요…"; $("ansOut").replaceChildren(); $("reveal").hidden = true;
+  const extractArr = (src, key) => {
+    const m = src.match(new RegExp('"' + key + '"\\s*:\\s*\\['));
+    if(!m) return [];
+    const out = []; let i = m.index + m[0].length, depth = 0, start = -1, inStr = false, esc = false;
+    for(; i < src.length; i++){
+      const c = src[i];
+      if(esc){ esc = false; continue; }
+      if(c === "\\"){ esc = true; continue; }
+      if(c === '"'){ inStr = !inStr; continue; }
+      if(inStr) continue;
+      if(c === "{"){ if(depth === 0) start = i; depth++; }
+      else if(c === "}"){ depth--; if(depth === 0 && start !== -1){ try{ out.push(JSON.parse(src.slice(start, i + 1))); }catch(e){} start = -1; } }
+      else if(c === "]" && depth === 0) break;
+    }
+    return out;
+  };
+  const onStream = txt => {
+    const out = $("exOut");
+    const cm = txt.match(/"correct"\s*:\s*(true|false)/);
+    const steps = extractArr(txt, "steps"), grams = extractArr(txt, "grammar");
+    if(!cm && !steps.length && !grams.length) return;
+    out.className = "res"; out.replaceChildren();
+    if(cm){ const ok = cm[1] === "true"; out.appendChild(el("span", ok ? "정확해요 👍" : "고칠 부분이 있어요", "tag " + (ok ? "ok" : "bad"))); }
+    if(steps.length){
+      out.appendChild(el("div","① 같이 하나씩 살펴볼까요?","sec"));
+      steps.forEach((st,i) => {
+        const b = el("div",null,"gbox");
+        b.appendChild(el("div",(i+1)+". "+(st.part||""),"gname"));
+        if(st.check) b.appendChild(el("div",st.check));
+        if(st.hint) b.appendChild(el("div","💡 "+st.hint));
+        if(st.question) b.appendChild(el("div","👉 "+st.question,"muted"));
+        out.appendChild(b);
+      });
+    }
+    if(grams.length){
+      out.appendChild(el("div","② 문법 배우기","sec"));
+      grams.forEach((g,i) => {
+        const b = el("div",null,"gbox");
+        b.appendChild(el("div",(i+1)+". "+(g.name||""),"gname"));
+        if(g.summary) b.appendChild(el("div",g.summary));
+        [["💡 왜 만들어졌을까요?", g.why],["⏰ 언제 쓰나요?", g.when],["🔧 어떻게 쓰나요?", g.how]].forEach(([h,t]) => { if(t){ b.appendChild(el("div",h,"gh")); b.appendChild(el("div",t)); } });
+        if(g.example){ b.appendChild(el("div","📝 예문","gh")); b.appendChild(el("div",g.example.en)); b.appendChild(el("div",g.example.ko,"muted")); }
+        out.appendChild(b);
+      });
+    }
+    out.appendChild(el("div","작성 중…","muted"));
+  };
+  try{
+    const bodyPrompt = dir === "en2ko"
+      ? `영어 문장: ${ko}\n학습자의 한국어 해석: ${en}\n\n학습자의 한국어 해석을 검토해 아래 JSON으로 답하라.\n중요 규칙: 1) 원문 앞에서부터 순서대로 틀렸거나 어색하게 해석한 부분만 골라 steps에 적는다(맞은 부분은 절대 넣지 말고, 다 맞았으면 []). 2) 각 step에서는 왜 잘못 해석했는지 이유를 차근차근 설명하되, 완성된 정답 해석은 "steps"와 "grammar"에 쓰지 마라(정답은 "corrected"와 "why"에만 쓴다).\n{"correct": 의미와 뉘앙스가 자연스럽고 정확하면 true,\n"steps": [{"part":"문장 앞에서부터 순서대로, 고칠 필요가 있는 원문 영어 표현","check":"왜 빠졌거나 어색한지 원인과 이유를 다정한 해요체 1~2문장으로 차근차근 설명(정답 해석 금지)","hint":"단어 뜻이나 구조를 짚어주는 힌트 1문장(정답 해석 금지)","question":"스스로 뜻을 떠올리게 하는 유도 질문 1개"}],\n"grammar": [{"name":"문법 이름(쉬운 말로)","why":"이 문법이 왜 쓰이는지 1문장","when":"언제 쓰는지 1문장","how":"해석/활용 핵심 규칙 1~2문장","example":{"en":"쉽고 짧은 예문","ko":"한국어 번역"}}] (원문의 핵심 문법 2개 내외),\n"corrected": "자연스럽고 정확한 한국어 해석(이미 좋으면 학습자 해석 그대로)",\n"why": ["고친 이유를 원문 앞에서부터 순서대로 한국어로 설명"]}`
+      : `한국어 문장: ${ko}\n학습자의 영어 번역: ${en}\n\n학습자의 번역을 검토해 아래 JSON으로 답하라.\n중요 규칙: 1) 문장 앞에서부터 순서대로(주어→동사→목적어→수식어 순) 틀렸거나 원어민 일상 표현과 어색한 부분만 골라 steps에 적는다. 맞은 부분은 절대 넣지 마라(완벽하면 []). 2) 각 step의 check에서는 왜 틀렸거나 어색한지 이유를 차근차근 설명하되, 정답 단어나 고친 문장은 "steps"와 "grammar"에 절대 직접 쓰지 마라(정답은 "corrected"와 "why"에만 쓴다).\n{"correct": 문법과 일상 표현이 모두 원어민처럼 자연스러우면 true,\n"steps": [{"part":"문장 앞에서부터 순서대로, 틀렸거나 어색한 부분만 그대로 인용","check":"왜 틀렸는지 또는 원어민 일상 표현과 왜 다른지 이유를 다정한 해요체 1~2문장으로 차근차근 설명(정답 직접 노출 금지)","hint":"스스로 고칠 수 있도록 원어민 감각·전치사·어순 방향을 힌트 1문장으로 안내(정답 직접 노출 금지)","question":"스스로 자연스러운 표현을 떠올리게 하는 유도 질문 1개"}],\n"grammar": [{"name":"문법/표현 포인트(쉬운 말로)","why":"왜 이런 표현을 쓰는지 1문장","when":"일상에서 언제 쓰는지 1문장","how":"핵심 규칙이나 자연스러운 쓰임 1~2문장","example":{"en":"이 문장과 다른 주제의 쉽고 자연스러운 예문","ko":"한국어 번역"}}] (핵심 문법·표현 2개 내외),\n"corrected": "원어민이 일상생활에서 가장 자연스럽게 말하는 문장(직역투 금지)",{READING}\n"why": ["문장 앞에서부터 순서대로, 일상에서 왜 이렇게 말하는지 이유를 한국어로 설명"]}`;
+    const prompt = fill(SYS + "\n\n" + bodyPrompt);
+    const r = await sample.json(prompt, onStream, msg => { $("exOut").className = "muted"; $("exOut").textContent = msg; });
+    const prev = load();
+    const ex = prev.find(x => x.ko === ko && (x.fid || "base") === curSel && (x.dir || "ko2en") === dir) || prev.find(x => x.id === openedId && x.ko === ko);
+    cur = {id: ex ? ex.id : Date.now()+"", t: Date.now(), ko, en, r, dir, revealed:false, solved:!!r.correct, fid:curSel};
+    $("retry").value = ""; $("reOut").textContent = "";
+    showExplain(); saveCur();
+  }catch(e){
+    const m = e && e.message;
+    $("exOut").className = "muted";
+    $("exOut").textContent = m === "503" ? "Groq 서버가 일시적으로 혼잡해(503) 응답하지 못했어요. 잠시 후 다시 눌러 주세요."
+      : m === "429" ? "무료 사용 한도(429)를 넘었어요. 잠시 뒤나 내일 다시 해 보세요."
+      : m === "timeout" ? "서버 응답 시간이 초과(15초)돼 중단했어요. 네트워크 상태를 확인하고 다시 눌러 주세요."
+      : "해설을 가져오지 못했어요. 잠시 후 다시 시도해 주세요.";
+  }finally{ $("check").disabled = false; }
+};
+
+$("reveal").onclick = () => { if(!cur) return; cur.revealed = true; $("reveal").hidden = true; showAnswer(); saveCur(); };
+const clearAll = () => { cur = null; openedId = null; renderQA(); $("ansIdle").hidden = false; $("listenIdle").hidden = false; $("listenGenRow").hidden = true; $("speakRow").hidden = true; $("speakMsg").textContent = ""; if(window.speechSynthesis) speechSynthesis.cancel(); $("ko").value=""; $("en").value=""; $("retry").value=""; $("reOut").textContent=""; $("ansOut").replaceChildren(); $("reveal").hidden=true; $("recheck").disabled=true; $("exOut").className="muted"; $("exOut").textContent="검사하기를 누르면 여기에 해설이 나와요."; };
+
+/* ---- 질문란 ---- */
+function renderQA(){
+  const log = $("qaLog"); log.replaceChildren();
+  ((cur && cur.qa) || []).forEach(m => log.appendChild(el("div", m.content, "qm " + (m.role === "user" ? "me" : "ai"))));
+}
+$("askBtn").onclick = async () => {
+  const q = $("qa").value.trim();
+  if(!q || !sample) return;
+  if(!cur){ $("qaLog").replaceChildren(el("div","먼저 문장을 검사한 뒤에 질문할 수 있어요.","muted")); return; }
+  cur.qa = cur.qa || []; cur.qa.push({role:"user", content:q}); $("qa").value = "";
+  renderQA(); const wait = el("div","생각하는 중…","qm ai muted"); $("qaLog").appendChild(wait);
+  $("askBtn").disabled = true;
+  const isE2K = (cur.dir || "ko2en") === "en2ko";
+  const ctx = SYS + "\n\n[학습 중인 문장]\n" + (isE2K ? "원문 영어: " : "한국어: ") + cur.ko + "\n" + (isE2K ? "학습자의 한국어 해석: " : "학습자의 번역: ") + cur.en + "\n" +
+    (cur.revealed ? "정답: " + cur.r.corrected : "정답(비공개, 학습자가 직접 알려달라고 하기 전에는 절대 말하지 마라): " + cur.r.corrected) +
+    "\n\n학습자의 질문에 아주 쉬운 한국어로 짧게 답하라. 마크다운 기호는 쓰지 마라. 학습자가 정답을 직접 알려달라고 요청했을 때만 정답을 알려주고, 그때는 gaveAnswer를 true로 한다. 그 외에는 힌트와 쉬운 설명으로 스스로 찾게 돕는다. 필요하면 왜 그렇게 쓰는지, 언제 어떻게 쓰는지도 함께 설명한다. JSON으로만 답하라: {\"answer\":\"답변\",\"gaveAnswer\":true 또는 false}\n\n[대화]\n";
+  const convo = cur.qa.map(m => (m.role === "user" ? "학습자: " : "선생님: ") + m.content).join("\n");
+  try{
+    const r = await sample.json(fill(ctx + convo));
+    cur.qa.push({role:"assistant", content:r.answer});
+    if(r.gaveAnswer && !cur.revealed){ cur.revealed = true; $("reveal").hidden = true; showAnswer(); }
+    saveCur();
+  }catch(e){
+    cur.qa.pop(); $("qa").value = q; renderQA();
+    $("qaLog").appendChild(el("div","답변을 가져오지 못했어요. 다시 시도해 주세요.","muted"));
+    $("askBtn").disabled = false; return;
+  }
+  $("askBtn").disabled = false; renderQA();
+};
+
+/* ---- 재도전 ---- */
+$("recheck").onclick = async () => {
+  const t = $("retry").value.trim();
+  if(!t || !cur || !sample) return;
+  $("recheck").disabled = true; $("reOut").textContent = "확인 중…";
+  try{
+    const isE2K = (cur.dir || "ko2en") === "en2ko";
+    const r = await ask(isE2K
+      ? `원문 영어 문장: ${cur.ko}\n모범 한국어 해석: ${cur.r.corrected}\n학습자가 다시 쓴 한국어 해석: ${t}\n\n학습자의 해석이 원문의 뜻을 자연스럽고 정확하게 옮겼는지 판단하라(모범 답안과 표현이 달라도 뜻이 정확하면 정답). JSON으로 답하라.\n{"correct": true 또는 false, "feedback": "한국어로 짧은 피드백. 틀렸다면 모범 해석을 직접 말하지 말고 힌트로만 알려준다. 맞다면 칭찬한다."}`
+      : `한국어 문장: ${cur.ko}\n모범 답안: ${cur.r.corrected}\n학습자가 다시 쓴 문장: ${t}\n\n학습자의 문장이 한국어 문장의 뜻을 문법적으로 올바르게 옮겼는지 판단하라(모범 답안과 달라도 맞으면 정답). JSON으로 답하라.\n{"correct": true 또는 false, "feedback": "한국어로 짧은 피드백. 틀렸다면 정답이나 올바른 형태를 직접 말하지 말고, 이전보다 나아진 점과 아직 다시 볼 부분을 힌트로만 알려준다. 맞다면 칭찬하고 더 자연스러운 표현이 있으면 알려준다."}`);
+    const o = $("reOut"); o.replaceChildren();
+    o.appendChild(el("span", r.correct ? "정답이에요 🎉" : "조금만 더!", "tag " + (r.correct ? "ok" : "bad")));
+    o.appendChild(el("div", r.feedback));
+    cur.retry = t; if(r.correct) cur.solved = true; saveCur();
+  }catch(e){
+    $("reOut").textContent = "확인하지 못했어요. 다시 시도해 주세요.";
+  }finally{ $("recheck").disabled = false; }
+};
+
+/* ---- 단어사전 ---- */
+async function lookup(){
+  const w = $("word").value.trim();
+  if(!w || !sample) return;
+  const out = $("dictOut"); out.className="muted"; out.textContent = "찾는 중…";
+  $("lookup").disabled = true;
+  try{
+    const isKo = /[가-힣]/.test(w);
+    const r = await ask(isKo
+      ? `한국어 "${w}"에 해당하는 자연스러운 영어 표현을 1~3개 알려줘. 각 후보 표현이 어떤 상황에서 쓰이는지도 간략히 1구절로 적어라. JSON:\n{"word":"${w}","pron":"","pos":"품사(한국어)","meanings":[{"expr":"영어 표현 ({PRON})","use":"어느 상황에 쓰는지 짧게(예: 편한 사이, 공식적인 자리, 움직이는 걸 볼 때)"}]}`
+      : `사전에서 영어 단어/표현 "${w}"를 찾아 한국어 뜻과 어느 상황에 쓰이는지 간략히 알려줘. JSON:\n{"word":"표제어(영어)","pron":"{PRON}","pos":"품사(한국어)","meanings":[{"expr":"한국어 뜻","use":"어느 상황에 쓰는지 짧게"}]}\n간결하게 답하고 오타로 보이면 가장 가까운 단어로 찾는다.`);
+    out.className=""; out.replaceChildren();
+    const hd = el("div",null,"dh"); hd.appendChild(el("b",r.word)); hd.appendChild(el("span",[r.pron,r.pos].filter(Boolean).join(" · "),"muted")); out.appendChild(hd);
+    (r.meanings||[]).forEach((m,i) => {
+      const row = el("div", null, "dm");
+      if(typeof m === "string"){ row.textContent = (i+1)+". "+m; }
+      else {
+        row.appendChild(el("span", (i+1)+". "+(m.expr||"")));
+        if(m.use) row.appendChild(el("span", " — " + m.use, "muted"));
+      }
+      out.appendChild(row);
+    });
+  }catch(e){ out.textContent = "단어를 찾지 못했어요. 다시 시도해 주세요."; }
+  finally{ $("lookup").disabled = false; }
+}
+$("lookup").onclick = lookup;
+$("word").addEventListener("keydown", e => { if(e.key==="Enter") lookup(); });
+
+function speak(text, rate){
+  if(!window.speechSynthesis){ $("speakMsg").textContent = "이 브라우저는 음성 재생을 지원하지 않아요."; return; }
+  const u = new SpeechSynthesisUtterance(text); u.lang = L.tts; u.rate = rate;
+  const vs = speechSynthesis.getVoices().filter(v => L.vre.test(v.lang));
+  const v = vs.find(v => L.pref.test(v.name)) || vs[0]; if(v) u.voice = v;
+  $("speakMsg").textContent = ""; speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function listen(rate){
+  if(!cur) return;
+  speak((cur.dir || "ko2en") === "en2ko" ? cur.ko : cur.r.corrected, rate);
+}
+$("genSpeak").onclick = () => {
+  if(!cur) return;
+  $("listenGenRow").hidden = true;
+  $("speakRow").hidden = false;
+  listen(0.95);
+};
+$("speak").onclick = () => listen(0.95);
+$("speakStop").onclick = () => { if(window.speechSynthesis) speechSynthesis.cancel(); };
+$("newStudy").onclick = () => { clearAll(); $("ko").focus({preventScroll:true}); window.scrollTo({top:0, behavior:"smooth"}); };
+function dedupe(){ const all = load(), seen = new Set(), out = []; all.forEach(x => { const k = (x.fid || "base") + "|" + x.ko; if(seen.has(k)) return; seen.add(k); out.push(x); }); if(out.length !== all.length) persist(out); }
+function applyDir(nextDir, swapText){
+  dir = nextDir === "en2ko" ? "en2ko" : "ko2en";
+  try{ localStorage.setItem("app:dir", dir); }catch(e){}
+  if(swapText){ const tmp = $("ko").value; $("ko").value = $("en").value; $("en").value = tmp; }
+  const isE2K = dir === "en2ko";
+  $("dirBtn").textContent = isE2K ? (L.name + " ↔ 한국어") : ("한국어 ↔ " + L.name);
+  $("srcBox").className = "fb " + (isE2K ? "en" : "ko");
+  $("enBox").className = "fb " + (isE2K ? "ko" : "en");
+  $("srcLabel").textContent = isE2K ? (L.flag + " " + L.name + " 문장") : "🇰🇷 한국어 문장";
+  $("enLabel").textContent = isE2K ? "🇰🇷 내 한국어 해석" : (L.flag + " 내 " + L.name + " 번역");
+  $("ko").placeholder = isE2K ? L.ph : "예) 나는 어제 친구와 함께 영화를 봤어.";
+  $("en").placeholder = isE2K ? "예) 나는 어제 친구와 함께 영화를 봤어." : L.ph;
+  $("retry").placeholder = isE2K ? "올바른 한국어 해석을 다시 입력" : ("올바른 " + L.name + " 문장을 다시 입력");
+  $("lead").textContent = isE2K
+    ? (L.name + " 문장을 적고 한국어로 해석해 보세요. 정답은 바로 알려드리지 않고, 스스로 찾도록 안내해 드릴게요.")
+    : ("한국어 문장을 적고 " + L.name + "로 번역해 보세요. 정답은 바로 알려드리지 않고, 스스로 찾도록 안내해 드릴게요.");
+}
+$("dirBtn").onclick = () => { applyDir(dir === "ko2en" ? "en2ko" : "ko2en", true); };
+function setLang(code){
+  L = LANGS[code] || LANGS.en; code = LANGS[code] ? code : "en";
+  try{ localStorage.setItem("app:lang", code); }catch(e){}
+  KEY = L.ek + ":entries"; FK = L.ek + ":folders";
+  document.title = "HERO"; $("ttl").textContent = L.name + " 문장 학습";
+  $("word").placeholder = L.name + " 또는 한국어"; $("qa").placeholder = L.qa;
+  $("langSel").value = code;
+  clearAll(); applyDir(dir, false); $("word").value = ""; $("dictOut").replaceChildren();
+  folders = loadFolders(); curSel = "base"; openIds.clear(); Object.keys(pageOf).forEach(k => delete pageOf[k]);
+  dedupe(); renderHist();
+}
+$("langSel").onchange = () => setLang($("langSel").value);
+if("serviceWorker" in navigator){ navigator.serviceWorker.register("sw.js").catch(() => {}); }
+setLang((() => { try{ return localStorage.getItem("app:lang"); }catch(e){ return null; } })() || "en");
+</script>
+</body>
+</html>
