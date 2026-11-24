@@ -26,7 +26,7 @@ h1{font-size:22px;margin:4px 0 2px}
 .step{font-size:12px;font-weight:700;color:var(--acc);letter-spacing:.04em}
 h2{font-size:16px;margin:2px 0 8px}
 textarea,input[type=text]{width:100%;border:1px solid var(--line);border-radius:10px;padding:10px;font:inherit;background:var(--bg);color:var(--ink)}
-textarea{min-height:76px;resize:vertical}
+textarea{height:96px;min-height:96px;resize:vertical;overflow-y:hidden}
 textarea:focus,input:focus{outline:2px solid var(--acc)}
 button{font:inherit;font-weight:600;border:0;border-radius:10px;padding:10px 16px;background:var(--acc);color:var(--accink);cursor:pointer;margin:8px 8px 0 0}
 button.ghost{background:transparent;color:var(--acc);border:1px solid var(--line)}
@@ -147,8 +147,6 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
     <option value="초급">초급</option>
     <option value="중급">중급</option>
     <option value="고급">고급</option>
-    <option value="대학">대학</option>
-    <option value="자격증">자격증</option>
   </select>
   <button id="genSent" type="button" class="ctl">✨ 문장 제시</button>
 </div>
@@ -209,7 +207,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 3.4</span><span>Made by 성원</span></div>
+<div class="ver"><span>Version 3.7</span><span>Made by 성원 아름</span></div>
 </main>
 
 <script>
@@ -425,12 +423,28 @@ $("addFolder").onclick = () => {
 };
 $("fsel").onchange = () => { curSel = $("fsel").value; };
 const LVL_GUIDE = {
-  "초급": "[길이] 외국어 기준 5~8단어(한중일 10~15자)의 짧은 단문 1개. [어휘] 아주 쉬운 기초 일상 단어만 사용(숙어·추상어 금지). [문법] 단순 현재·과거 시제의 기본 주어+동사(+목적어/장소)만 사용(접속사·관계사·수동태 금지).",
-  "중급": "[길이] 외국어 기준 10~14단어(한중일 18~26자). [어휘] 일상 회화·중고교 핵심 어휘와 흔한 동사구 사용. [문법] 이유/시간/조건 접속사, 비교급, to부정사/동명사, 현재완료 중 1~2가지 반드시 포함.",
-  "고급": "[길이] 외국어 기준 16~22단어(한중일 28~40자)의 긴 복문. [어휘] 세련된 형용사·부사, 추상적·관용적 표현 적극 사용. [문법] 관계사절, 분사구문, 가정법, 수동태 중 2가지 이상을 자연스럽게 결합.",
-  "대학": "[길이] 외국어 기준 20~28단어(한중일 35~50자)의 논리적·학술적 문장. [어휘] 대학 교양·시사·인문/사회/과학 개념어 사용. [문법] 중첩된 종속절, 수동태, 관계절, 분사/도치/강조 구문 등 고난도 복합 구문 사용.",
-  "자격증": "[길이] 외국어 기준 15~22단어(한중일 25~40자). [어휘] TOEIC·TEPS·OPIc·HSK·JLPT 등 어학 시험 및 비즈니스·공고·독해 빈출 어휘 사용. [문법] 시험 출제 포인트(시제 일치, 가정법, 수동태, 관계사, 전치사구/접속부사)를 1~2개 이상 명확히 포함."
+  "초급": "[길이] 외국어 기준 5~8단어(한중일 10~15자)의 짧은 단문 1개. [어휘] 기초 일상 단어만 사용(숙어·추상어 금지). [문법] 단순 현재·과거 시제의 기본 주어+동사(+목적어/장소)만 사용.",
+  "중급": "[길이] 외국어 기준 11~15단어(한중일 20~28자). [어휘] 일상 회화 핵심 어휘와 동사구 사용. [문법] 초급의 기본 시제·어순을 바탕으로 이유/시간/조건 접속사, 비교급, to부정사/동명사, 현재완료 중 1~2가지를 결합.",
+  "고급": "[길이] 외국어 기준 17~24단어(한중일 30~44자)의 긴 복문. [어휘] 세련된 형용사·부사·추상/관용 표현 사용. [문법] 초급·중급에서 익힌 문법(시제·접속사·부정사 등)을 토대로 관계사절, 분사구문, 가정법, 수동태 중 2가지 이상을 결합."
 };
+function getLowerLearned(lv){
+  const lowerNames = lv === "고급" ? ["초급", "중급"] : lv === "중급" ? ["초급"] : [];
+  if(!lowerNames.length) return "";
+  const lowerIds = new Set(folders.filter(f => lowerNames.includes(f.name)).map(f => f.id));
+  const items = load().filter(x => lowerIds.has(x.fid));
+  const grams = [];
+  items.slice(0, 8).forEach(x => {
+    (x.r && x.r.grammar || []).forEach(g => {
+      const n = typeof g === "string" ? g : g.name;
+      if(n && !grams.includes(n)) grams.push(n);
+    });
+  });
+  const sents = items.slice(0, 3).map(x => (x.r && x.r.corrected) || x.ko).filter(Boolean);
+  const parts = [];
+  if(grams.length) parts.push("배운 문법: " + grams.slice(0, 6).join(", "));
+  if(sents.length) parts.push("배운 문장 예: " + sents.join(" / "));
+  return parts.join(" | ");
+}
 function ensureLevelFolder(lv){
   if(!lv) return;
   let f = folders.find(x => x.name === lv);
@@ -460,12 +474,14 @@ $("genSent").onclick = async () => {
   clearAll();
   const recent = load().slice(0, 5).map(x => x.ko).join(" / ");
   const guide = LVL_GUIDE[lv] || lv;
+  const lower = getLowerLearned(lv);
+  const lowerNote = lower ? `하위 등급에서 이미 배운 내용(${lower})을 자연스럽게 응용·확장해서 포함하라.\n` : "";
   const genPrompt = dir === "en2ko"
-    ? `한국인 학습자가 한국어로 해석 연습을 할 수 있도록 반드시 ${L.name} 문장 1개만 작성하라(한국어나 설명 절대 포함 금지).\n난이도(${lv}): ${guide}\n${recent ? "최근 문장과 겹치지 않게: " + recent + "\n" : ""}위 길이·어휘·문법 기준을 엄격히 지켜라. JSON으로만 답하라:\n{"sentence":"${L.name} 문장 1개"}`
-    : `한국인 학습자가 ${L.name}로 번역 연습을 할 수 있도록 반드시 순수 한국어 문장 1개만 작성하라(${L.name} 등 외국어나 번역을 절대 쓰지 마라).\n난이도(${lv}): ${guide} (한국어 문장 자체의 어휘·구조·길이도 이 난이도에 맞추되, 번역했을 때 위 기준이 나오도록 구성하라)\n${recent ? "최근 문장과 겹치지 않게: " + recent + "\n" : ""}JSON으로만 답하라:\n{"sentence":"순수 한국어 문장 1개"}`;
+    ? `한국인 학습자가 한국어로 해석 연습을 할 수 있도록 반드시 ${L.name} 문장 1개만 작성하라(한국어나 설명 절대 포함 금지).\n난이도(${lv}): ${guide}\n${lowerNote}${recent ? "최근 문장과 겹치지 않게: " + recent + "\n" : ""}위 길이·어휘·문법 기준을 엄격히 지켜라. JSON으로만 답하라:\n{"sentence":"${L.name} 문장 1개"}`
+    : `한국인 학습자가 ${L.name}로 번역 연습을 할 수 있도록 반드시 순수 한국어 문장 1개만 작성하라(${L.name} 등 외국어나 번역을 절대 쓰지 마라).\n난이도(${lv}): ${guide} (한국어 문장 자체의 어휘·구조·길이도 이 난이도에 맞추되, 번역했을 때 위 기준이 나오도록 구성하라)\n${lowerNote}${recent ? "최근 문장과 겹치지 않게: " + recent + "\n" : ""}JSON으로만 답하라:\n{"sentence":"순수 한국어 문장 1개"}`;
   try{
     const r = await sample.json(genPrompt);
-    if(r && r.sentence){ $("ko").value = r.sentence.trim(); $("en").focus(); }
+    if(r && r.sentence){ $("ko").value = r.sentence.trim(); fitBox($("ko")); $("en").focus(); }
   }catch(e){
     $("exOut").className = "muted";
     $("exOut").textContent = "문장을 만들지 못했어요. API 키나 네트워크를 확인하고 다시 눌러 주세요.";
@@ -519,10 +535,19 @@ function showAnswer(){
   a.appendChild(el("div","정답","sec")); a.appendChild(el("div", cur.r.corrected, "fix")); if(cur.r.reading) a.appendChild(el("div", cur.r.reading, "muted"));
   if(cur.r.why && cur.r.why.length){ a.appendChild(el("div","이렇게 고친 이유","sec")); a.appendChild(olist(cur.r.why)); }
 }
+function fitBox(el){
+  if(!el) return;
+  if(!el.value){ el.style.height = ""; return; }
+  el.style.height = "auto";
+  el.style.height = Math.max(96, el.scrollHeight + 2) + "px";
+}
+function fitAllBoxes(){ ["ko","en","retry","qa"].forEach(id => fitBox($(id))); }
+["ko","en","retry","qa"].forEach(id => $(id).addEventListener("input", () => fitBox($(id))));
 function openEntry(x){
   cur = x; openedId = x.id; curSel = x.fid || "base"; refreshSel();
   applyDir(x.dir || "ko2en", false);
   $("ko").value = x.ko; $("en").value = x.en; $("retry").value = ""; $("reOut").textContent = "";
+  fitAllBoxes();
   showExplain(); window.scrollTo({top:0,behavior:"smooth"});
 }
 
@@ -601,7 +626,7 @@ $("check").onclick = async () => {
 };
 
 $("reveal").onclick = () => { if(!cur) return; cur.revealed = true; $("reveal").hidden = true; showAnswer(); saveCur(); };
-const clearAll = () => { cur = null; openedId = null; renderQA(); $("ansIdle").hidden = false; $("listenIdle").hidden = false; $("listenGenRow").hidden = true; $("speakRow").hidden = true; $("speakMsg").textContent = ""; if(window.speechSynthesis) speechSynthesis.cancel(); $("ko").value=""; $("en").value=""; $("retry").value=""; $("reOut").textContent=""; $("ansOut").replaceChildren(); $("reveal").hidden=true; $("recheck").disabled=true; $("exOut").className="muted"; $("exOut").textContent="검사하기를 누르면 여기에 해설이 나와요."; };
+const clearAll = () => { cur = null; openedId = null; renderQA(); $("ansIdle").hidden = false; $("listenIdle").hidden = false; $("listenGenRow").hidden = true; $("speakRow").hidden = true; $("speakMsg").textContent = ""; if(window.speechSynthesis) speechSynthesis.cancel(); $("ko").value=""; $("en").value=""; $("retry").value=""; $("reOut").textContent=""; fitAllBoxes(); $("ansOut").replaceChildren(); $("reveal").hidden=true; $("recheck").disabled=true; $("exOut").className="muted"; $("exOut").textContent="검사하기를 누르면 여기에 해설이 나와요."; };
 
 /* ---- 질문란 ---- */
 function renderQA(){
@@ -704,7 +729,7 @@ function dedupe(){ const all = load(), seen = new Set(), out = []; all.forEach(x
 function applyDir(nextDir, swapText){
   dir = nextDir === "en2ko" ? "en2ko" : "ko2en";
   try{ localStorage.setItem("app:dir", dir); }catch(e){}
-  if(swapText){ const tmp = $("ko").value; $("ko").value = $("en").value; $("en").value = tmp; }
+  if(swapText){ const tmp = $("ko").value; $("ko").value = $("en").value; $("en").value = tmp; fitAllBoxes(); }
   const isE2K = dir === "en2ko";
   $("dirBtn").textContent = isE2K ? (L.name + " ↔ 한국어") : ("한국어 ↔ " + L.name);
   $("srcBox").className = "fb " + (isE2K ? "en" : "ko");
