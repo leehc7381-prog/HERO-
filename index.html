@@ -144,13 +144,11 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
   <span class="muted">🎯 난이도</span>
   <select id="lvlSel" class="ctl" aria-label="난이도 선택">
     <option value="">직접 입력</option>
-    <option value="초등">초등</option>
-    <option value="중등">중등</option>
-    <option value="고등">고등</option>
-    <option value="오픽">오픽(OPIc)</option>
-    <option value="텝스">텝스(TEPS)</option>
-    <option value="토익">토익(TOEIC)</option>
-    <option value="G-TELP">G-TELP</option>
+    <option value="초급">초급</option>
+    <option value="중급">중급</option>
+    <option value="고급">고급</option>
+    <option value="대학">대학</option>
+    <option value="자격증">자격증</option>
   </select>
   <button id="genSent" type="button" class="ctl">✨ 문장 제시</button>
 </div>
@@ -211,7 +209,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 3.2</span><span>Made by 성원</span></div>
+<div class="ver"><span>Version 3.3</span><span>Made by 성원</span></div>
 </main>
 
 <script>
@@ -427,13 +425,11 @@ $("addFolder").onclick = () => {
 };
 $("fsel").onchange = () => { curSel = $("fsel").value; };
 const LVL_GUIDE = {
-  "초등": "대한민국 초등 3~6학년 수준 (기초 일상 어휘, 단순 시제, 짧고 쉬운 문장)",
-  "중등": "대한민국 중학교 수준 (기본 접속사, 비교급, to부정사/동명사, 8~12단어 내외)",
-  "고등": "대한민국 고등학교·수능 수준 (관계사, 분사, 가정법이나 추상적 표현 포함)",
-  "오픽": "OPIc(오픽) IH~AL 수준 (일상·경험·감정을 묘사하는 자연스러운 구어체 회화 문장)",
-  "텝스": "TEPS(텝스) 수준 (논리적이고 정확한 구문·어휘가 포함된 중상급 문장)",
-  "토익": "TOEIC(토익) 비즈니스·실무 수준 (회의, 이메일, 일정, 계약, 업무 상황 문장)",
-  "G-TELP": "G-TELP(지텔프) Level 2 수준 (시제·조동사·가정법·관계사 포인트가 분명한 실용 문장)"
+  "초급": "[길이] 외국어 기준 5~8단어(한중일 10~15자)의 짧은 단문 1개. [어휘] 아주 쉬운 기초 일상 단어만 사용(숙어·추상어 금지). [문법] 단순 현재·과거 시제의 기본 주어+동사(+목적어/장소)만 사용(접속사·관계사·수동태 금지).",
+  "중급": "[길이] 외국어 기준 10~14단어(한중일 18~26자). [어휘] 일상 회화·중고교 핵심 어휘와 흔한 동사구 사용. [문법] 이유/시간/조건 접속사, 비교급, to부정사/동명사, 현재완료 중 1~2가지 반드시 포함.",
+  "고급": "[길이] 외국어 기준 16~22단어(한중일 28~40자)의 긴 복문. [어휘] 세련된 형용사·부사, 추상적·관용적 표현 적극 사용. [문법] 관계사절, 분사구문, 가정법, 수동태 중 2가지 이상을 자연스럽게 결합.",
+  "대학": "[길이] 외국어 기준 20~28단어(한중일 35~50자)의 논리적·학술적 문장. [어휘] 대학 교양·시사·인문/사회/과학 개념어 사용. [문법] 중첩된 종속절, 수동태, 관계절, 분사/도치/강조 구문 등 고난도 복합 구문 사용.",
+  "자격증": "[길이] 외국어 기준 15~22단어(한중일 25~40자). [어휘] TOEIC·TEPS·OPIc·HSK·JLPT 등 어학 시험 및 비즈니스·공고·독해 빈출 어휘 사용. [문법] 시험 출제 포인트(시제 일치, 가정법, 수동태, 관계사, 전치사구/접속부사)를 1~2개 이상 명확히 포함."
 };
 function ensureLevelFolder(lv){
   if(!lv) return;
@@ -455,7 +451,7 @@ $("lvlSel").onchange = () => {
 $("genSent").onclick = async () => {
   let lv = $("lvlSel").value;
   if(!lv){
-    lv = "중등"; $("lvlSel").value = lv;
+    lv = "중급"; $("lvlSel").value = lv;
     try{ localStorage.setItem(L.ek + ":lvl", lv); }catch(e){}
     ensureLevelFolder(lv);
   }
@@ -466,7 +462,7 @@ $("genSent").onclick = async () => {
   const targetLang = dir === "en2ko" ? L.name : "한국어";
   const guide = LVL_GUIDE[lv] || lv;
   try{
-    const r = await ask(`학습자 수준: ${guide}\n학습 언어: ${L.name}\n제시할 문장 언어: ${targetLang}\n${recent ? "최근에 풀었던 문장(겹치지 않게): " + recent + "\n" : ""}위 수준에 꼭 맞는 연습용 문장 1개를 새로 만들어라. ${dir === "en2ko" ? L.name + " 원문을 자연스럽게 작성하라." : "한국어 문장을 자연스럽게 작성하라."} JSON으로만 답하라:\n{"sentence":"문장 1개"}`);
+    const r = await ask(`난이도 등급: ${lv}\n세부 기준: ${guide}\n학습 언어: ${L.name}\n제시할 문장 언어: ${targetLang}\n${recent ? "최근에 풀었던 문장(겹치지 않게): " + recent + "\n" : ""}위 [길이], [어휘], [문법] 기준을 반드시 엄격하게 지켜 난이도 차이가 뚜렷이 드러나는 연습 문장 1개를 작성하라. 초급에 어려운 문법을 넣거나 고급/대학에 짧은 단문을 내지 마라. JSON으로만 답하라:\n{"sentence":"문장 1개"}`);
     if(r && r.sentence){ $("ko").value = r.sentence.trim(); $("en").focus(); }
   }catch(e){
     $("exOut").className = "muted";
