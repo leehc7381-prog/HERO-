@@ -117,26 +117,43 @@ body.ws main{padding-bottom:190px}
 .vt .vf{flex:1}
 .vt button{margin:0;padding:2px 8px;font-size:12px}
 .vm{font-size:14px;margin:4px 0}
-.srow.sel3{flex-wrap:nowrap;gap:6px}
-.srow.sel3 select.ctl{flex:1 1 0;min-width:0;padding:0 20px 0 8px;font-size:12.5px;text-overflow:ellipsis;background-position:calc(100% - 12px) 14px,calc(100% - 7px) 14px}
-.srow.btn2 .ctl{flex:1}
+.hrow{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:2px 0 8px}
+.hrow h2{margin:0;white-space:nowrap}
+.hctl,.hctl.srow{display:flex;flex-wrap:nowrap;gap:6px;align-items:center;min-width:0;margin:0}
+.hctl .ctl{height:32px;font-size:12.5px;padding:0 10px}
+.hctl select.ctl{max-width:92px;padding:0 20px 0 8px;background-position:calc(100% - 12px) 13px,calc(100% - 7px) 13px}
+.srow.genrow{flex-wrap:nowrap;gap:6px;align-items:center}
+.genrow select.ctl{flex:0 1 auto;min-width:0;font-size:12.5px;padding:0 20px 0 8px;text-overflow:ellipsis;background-position:calc(100% - 12px) 14px,calc(100% - 7px) 14px}
+.genrow #lvlSel{max-width:112px}.genrow #topicSel{max-width:92px}
+.genrow #genSent{flex:1 1 auto;height:44px;font-size:15px;color:var(--accink);background:var(--acc);border-color:var(--acc)}
 .w.ph{border-bottom:1.5px dotted var(--acc)}
 .chip{display:inline-block;margin:3px 6px 3px 0;padding:2px 10px;border:1px solid var(--line);border-radius:99px;font-size:14px}
 .lvbar{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin:2px 0 12px;font-size:12.5px;color:var(--sub)}
-.lvpill{font-weight:700;padding:2px 10px;border-radius:99px;background:var(--hl);color:var(--acc);font-size:13px}
+.lvpill{cursor:pointer;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--hl);color:var(--acc);font-size:13px}
 .score{--c:var(--ok);margin:8px 0}
 .score.mid{--c:#d99a1c}.score.bad{--c:var(--bad)}
 .score .sn{font-size:22px;font-weight:800;color:var(--c)}
 .score .sd{font-size:12.5px;color:var(--sub);margin-left:8px}
 .meter{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:4px 0 2px}
 .meter>i{display:block;height:100%;border-radius:99px;background:var(--c)}
-#lvNote{margin:0 0 10px}
+#lvInfo{margin:0 0 12px;font-size:13px}
+#lvInfo .lvrow{padding:3px 0;border-top:1px solid var(--line)}
+#lvInfo .lvrow.me{font-weight:700;color:var(--acc)}
+#lvPop{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px}
+.pop{background:var(--card);border-radius:18px;padding:22px 20px;max-width:340px;width:100%;text-align:center}
+.pop .pe{font-size:54px;line-height:1.1;animation:pb .7s ease-in-out infinite alternate}
+.pop.down .pe{animation:none}
+.pop h3{margin:6px 0 8px;font-size:19px}
+.pop p{margin:6px 0}
+#popOk{width:100%;margin:14px 0 0;padding:12px}
+@keyframes pb{from{transform:translateY(0)}to{transform:translateY(-9px)}}
 </style>
 </head>
 <body>
 <main>
 <div class="top"><h1 id="ttl">영어 문장 학습</h1><div class="topr"><select id="langSel" class="lang"><option value="en">🇺🇸 영어</option><option value="es">🇪🇸 스페인어</option><option value="ja">🇯🇵 일본어</option><option value="zh">🇨🇳 중국어(간체)</option></select><button id="gearBtn" class="lang" title="AI 키 설정">🔑</button></div></div>
 <div class="lvbar" id="lvBar"></div>
+<div class="gbox" id="lvInfo" hidden></div>
 <p class="lead" id="lead">한국어 문장을 적고 영어로 번역해 보세요. 정답은 바로 알려드리지 않고, 스스로 찾도록 안내해 드릴게요.</p>
 <p class="muted" style="font-size:12.5px;margin:-10px 0 14px">🔑 처음 사용 시 우측 상단 열쇠 버튼을 눌러 API 키를 등록해 주세요.</p>
 
@@ -165,16 +182,23 @@ body.ws main{padding-bottom:190px}
 </section>
 
 <section class="card">
-<div class="step">1단계</div><h2>문장 쓰고 번역하기</h2>
-<div class="srow sel3">
-  <select id="fsel" class="ctl" aria-label="폴더"></select>
+<div class="step">1단계</div>
+<div class="hrow"><h2>문장 쓰고 번역하기</h2>
+  <div class="hctl srow"><select id="fsel" class="ctl" aria-label="폴더"></select><button id="dirBtn" type="button" class="ctl" title="한국어와 외국어 입력 방향 바꾸기">한→영</button></div>
+</div>
+<div class="srow genrow">
   <select id="lvlSel" class="ctl" aria-label="난이도">
-    <option value="">🎯 내 레벨</option>
-    <option value="왕초급">🎯 왕초급</option>
-    <option value="초급">🎯 초급</option>
-    <option value="중급">🎯 중급</option>
-    <option value="고급">🎯 고급</option>
-    <option value="최고급">🎯 최고급</option>
+    <option value="">내 레벨</option>
+    <option value="Lv.1 왕초급">Lv.1 왕초급</option>
+    <option value="Lv.2 초급1">Lv.2 초급1</option>
+    <option value="Lv.3 초급2">Lv.3 초급2</option>
+    <option value="Lv.4 초급3">Lv.4 초급3</option>
+    <option value="Lv.5 중급1">Lv.5 중급1</option>
+    <option value="Lv.6 중급2">Lv.6 중급2</option>
+    <option value="Lv.7 고급1">Lv.7 고급1</option>
+    <option value="Lv.8 고급2">Lv.8 고급2</option>
+    <option value="Lv.9 최고급1">Lv.9 최고급1</option>
+    <option value="Lv.10 최고급2">Lv.10 최고급2</option>
   </select>
   <select id="topicSel" class="ctl" aria-label="주제">
     <option value="랜덤">🏷️ 랜덤</option>
@@ -188,9 +212,6 @@ body.ws main{padding-bottom:190px}
     <option value="건강·병원">🏷️ 건강·병원</option>
     <option value="시사·사회">🏷️ 시사·사회</option>
   </select>
-</div>
-<div class="srow btn2">
-  <button id="dirBtn" type="button" class="ctl" title="한국어와 외국어 입력 방향 바꾸기">한국어 ↔ 영어</button>
   <button id="genSent" type="button" class="ctl">✨ 문장 제시</button>
 </div>
 <div class="fb ko" id="srcBox"><label for="ko" id="srcLabel">🇰🇷 한국어 문장</label>
@@ -208,7 +229,6 @@ body.ws main{padding-bottom:190px}
 <section class="card">
 <div class="step">2단계</div><h2>해설과 질문</h2>
 <p class="muted" style="margin:0 0 8px;font-size:12.5px">💡 해설 속 단어를 누르거나 길게 눌러 선택하면 단어장에 담을 수 있어요.</p>
-<div id="lvNote" class="gbox" hidden></div>
 <div id="exOut" class="muted">검사하기를 누르면 여기에 해설이 나와요.</div>
 <div style="border-top:1px solid var(--line);margin:16px 0 10px"></div>
 <h2>💬 궁금한 점 질문하기</h2>
@@ -262,8 +282,10 @@ body.ws main{padding-bottom:190px}
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 4.6</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 4.7</span><span>Made by 성원 아름</span></div>
 </main>
+
+<div id="lvPop" hidden><div class="pop" id="popBox"><div class="pe" id="popE"></div><h3 id="popT"></h3><p id="popM"></p><p id="popD" class="muted"></p><button id="popOk">확인</button></div></div>
 
 <div id="wsheet" hidden><div class="in">
   <div class="wrow"><input type="text" id="wpick" aria-label="선택한 단어"><button id="wadd">📒 단어장에 추가</button><button id="wx" class="ghost" title="닫기">✕</button></div>
@@ -483,11 +505,16 @@ $("addFolder").onclick = () => {
 };
 $("fsel").onchange = () => { curSel = $("fsel").value; };
 const LVL_GUIDE = {
-  "왕초급": "[수준] 초등 3~4학년 영어. [길이] 외국어 3~5단어(한중일 5~9자), 한국어 문장 5~12자의 아주 짧은 문장. [어휘] 색깔·가족·숫자·동물·음식·학교 등 초등 필수 기초 단어만. [문법] be동사(am/is/are)와 단순 현재형의 긍정문·의문문만(I like apples. This is my bag.). 과거형·부정문·접속사·조동사는 금지.",
-  "초급": "[수준] 초등 5~6학년~중학교 1학년. [길이] 외국어 5~8단어(한중일 9~14자), 한국어 문장 12~22자. [어휘] 초등 필수 어휘와 일상 기본 단어(어려운 단어·숙어 금지). [문법] 단순 과거, 일반동사 부정문·의문문, can, 현재진행형, there is/are, 빈도부사 중 1가지. 접속사는 and/but/so만 허용.",
-  "중급": "[수준] 중학교 2~3학년. [길이] 외국어 8~12단어(한중일 15~24자), 한국어 문장 20~35자. [어휘] 중학교 교과서 수준의 일상·학교·여행 어휘, 쉬운 구동사 1개까지. [문법] 미래(will/be going to), must/should/have to, to부정사, 동명사, 비교급·최상급, 접속사(because/when/if/that) 중 1~2가지. 수동태는 쉬운 것 1개까지.",
-  "고급": "[수준] 고등학교 1~2학년(공통영어) 수준. [길이] 외국어 12~18단어(한중일 25~35자), 한국어 문장 30~50자. [어휘] 고교 교과서·수능 기본 어휘, 흔한 구동사·숙어 1~2개. [문법] 현재완료, 수동태, 관계대명사(who/which/that), 분사(현재분사·과거분사), 가정법 과거, 간접의문문 중 1~2가지를 자연스럽게.",
-  "최고급": "[수준] 고등학교 3학년~수능·대학 초입 수준. [길이] 외국어 18~28단어(한중일 35~55자)의 복문, 한국어 문장 45~80자. [어휘] 수능 고난도·시사·학술 어휘, 추상어·관용 표현. [문법] 가정법 과거완료, 분사구문, 관계부사·계속적 용법, 도치·강조구문, 완료수동 중 2가지 이상을 결합."
+  "Lv.1 왕초급": "[수준] 초등 3학년. [길이] 외국어 3~4단어(한중일 4~8자), 한국어 문장 5~10자. [어휘] 색깔·가족·숫자·동물·음식 등 가장 쉬운 기초 단어만. [문법] be동사(am/is/are) 긍정문과 'I like ~', 'This is ~' 같은 아주 단순한 문장만. 과거형·부정문·의문문·접속사 금지.",
+  "Lv.2 초급1": "[수준] 초등 4학년. [길이] 외국어 4~6단어(한중일 6~11자), 한국어 문장 8~14자. [어휘] 초등 필수 기초 단어(학교·취미·신체·날씨). [문법] 단순 현재형의 긍정·부정·의문(do/does), have/has, 인칭대명사, 장소 전치사(in/on/at). 과거형·조동사 금지.",
+  "Lv.3 초급2": "[수준] 초등 5학년. [길이] 외국어 5~7단어(한중일 8~13자), 한국어 문장 10~18자. [어휘] 초등 필수 어휘와 일상 기본 단어. [문법] can/can't, 현재진행형, There is/are, 빈도부사(always/usually), 시간 표현(at 7) 중 1가지. 과거형·접속사 금지.",
+  "Lv.4 초급3": "[수준] 초등 6학년~중학교 1학년. [길이] 외국어 6~9단어(한중일 10~16자), 한국어 문장 12~22자. [어휘] 중1 수준 일상 어휘. [문법] 단순 과거(규칙·불규칙), 의문사(what/where/when/who/why), 접속사 and/but/so 중 1가지. 현재완료·수동태 금지.",
+  "Lv.5 중급1": "[수준] 중학교 2학년. [길이] 외국어 8~11단어(한중일 14~22자), 한국어 문장 18~30자. [어휘] 중학교 교과서 일상 어휘. [문법] 미래(will/be going to), must/should/have to, to부정사(명사적 용법), 접속사(because/when/if/that) 중 1~2가지.",
+  "Lv.6 중급2": "[수준] 중학교 3학년. [길이] 외국어 9~13단어(한중일 17~27자), 한국어 문장 22~38자. [어휘] 중3 수준 어휘, 쉬운 구동사 1개까지. [문법] 동명사, 비교급·최상급, 쉬운 수동태, 현재완료(경험·완료) 중 1~2가지.",
+  "Lv.7 고급1": "[수준] 고등학교 1학년(공통영어). [길이] 외국어 11~15단어(한중일 22~32자), 한국어 문장 28~45자. [어휘] 고교 기본·수능 기초 어휘, 숙어 1개. [문법] 현재완료(계속)·현재완료진행, 수동태, 관계대명사(who/which/that), 간접의문문, to부정사 부사적·형용사적 용법 중 1~2가지.",
+  "Lv.8 고급2": "[수준] 고등학교 2학년. [길이] 외국어 13~18단어(한중일 28~40자), 한국어 문장 35~55자. [어휘] 수능 필수 어휘, 구동사·숙어 1~2개. [문법] 분사(현재·과거), 가정법 과거, 관계부사, 사역·지각동사, 관계대명사 중 2가지 이상.",
+  "Lv.9 최고급1": "[수준] 고등학교 3학년~수능. [길이] 외국어 16~22단어(한중일 35~50자), 한국어 문장 45~70자. [어휘] 수능 고난도·시사 어휘, 추상어. [문법] 분사구문, 가정법 과거완료, 관계사 계속적 용법, 도치·강조구문 중 2가지 이상을 결합.",
+  "Lv.10 최고급2": "[수준] 대학 교양·원어민에 가까운 수준. [길이] 외국어 20~28단어(한중일 45~65자)의 복합 복문, 한국어 문장 60~90자. [어휘] 학술·시사·추상 어휘와 관용 표현, 뉘앙스가 중요한 단어. [문법] 혼합가정법, 완료분사구문, 관계사절+분사구문+가정법의 결합, 도치 등 3가지 이상을 자연스럽게."
 };
 function getLowerLearned(lv){
   const lowerNames = LV.slice(0, Math.max(0, LV.indexOf(lv)));
@@ -659,7 +686,6 @@ $("check").onclick = async () => {
   const ko = $("ko").value.trim(), en = $("en").value.trim();
   if(!ko || !en){ $("exOut").textContent = fill("한국어 문장과 영어 번역을 모두 입력해 주세요."); return; }
   if(!sample) return;
-  $("lvNote").hidden = true;
   $("check").disabled = true; $("exOut").className="muted"; $("exOut").textContent = "해설을 만들고 있어요…"; $("ansOut").replaceChildren(); $("reveal").hidden = true;
   const extractArr = (src, key) => {
     const m = src.match(new RegExp('"' + key + '"\\s*:\\s*\\['));
@@ -769,64 +795,62 @@ $("recheck").onclick = async () => {
 };
 
 /* ---- 레벨 시스템 ---- */
-const LV = ["왕초급","초급","중급","고급","최고급"];
-let prog = {my:"초급", run:{lv:"", good:0, bad:0}, recent:[]};
+const LV = ["Lv.1 왕초급", "Lv.2 초급1", "Lv.3 초급2", "Lv.4 초급3", "Lv.5 중급1", "Lv.6 중급2", "Lv.7 고급1", "Lv.8 고급2", "Lv.9 최고급1", "Lv.10 최고급2"];
+const LVD = ["초3 · 3~4단어 · be동사, I like ~", "초4 · 4~6단어 · 현재형 긍정·부정·의문", "초5 · 5~7단어 · can, 현재진행, There is/are", "초6~중1 · 6~9단어 · 과거형, 의문사, and/but/so", "중2 · 8~11단어 · 미래, must/should, to부정사", "중3 · 9~13단어 · 동명사, 비교급, 수동태, 현재완료", "고1 · 11~15단어 · 관계대명사, 간접의문문", "고2 · 13~18단어 · 분사, 가정법 과거, 관계부사", "고3·수능 · 16~22단어 · 분사구문, 가정법 과거완료, 도치", "대학·원어민급 · 20~28단어 · 혼합가정법, 복합 복문"];
+const OLDLV = {"왕초급":"Lv.1 왕초급", "초급":"Lv.3 초급2", "중급":"Lv.5 중급1", "고급":"Lv.7 고급1", "최고급":"Lv.9 최고급1"};
+const normLv = v => LV.includes(v) ? v : (OLDLV[v] || "");
+let prog = {my:"Lv.3 초급2", recent:[]}, popDone = null;
 const curLv = () => $("lvlSel").value || prog.my;
+const avgOf = a => a.length ? Math.round(a.reduce((x, y) => x + y, 0) / a.length) : null;
 function loadProg(){
   let p = null; try{ p = JSON.parse(localStorage.getItem(L.ek + ":prog")); }catch(e){}
-  if(!p || !LV.includes(p.my)){
-    let sv = ""; try{ sv = localStorage.getItem(L.ek + ":lvl") || ""; }catch(e){}
-    p = {my: LV.includes(sv) ? sv : "초급", run:{lv:"", good:0, bad:0}, recent:[]};
-  }
-  p.run = p.run || {lv:"", good:0, bad:0}; p.recent = p.recent || []; prog = p;
+  let my = normLv(p && p.my);
+  if(!my){ let sv = ""; try{ sv = localStorage.getItem(L.ek + ":lvl") || ""; }catch(e){} my = normLv(sv) || "Lv.3 초급2"; }
+  prog = {my, recent: (p && Array.isArray(p.recent) && normLv(p.my) ? p.recent : []).filter(x => typeof x === "number").slice(0, 20)};
 }
 function saveProg(){ try{ localStorage.setItem(L.ek + ":prog", JSON.stringify(prog)); }catch(e){} }
+function renderLvInfo(){
+  const b = $("lvInfo"); b.replaceChildren();
+  b.appendChild(el("div", "최근 20문장 평균이 80점 이상이면 레벨업, 60점 이하면 레벨다운이에요. 내 레벨 단계에서 푼 문장만 평균에 반영돼요.", "muted"));
+  LV.forEach((l, i) => b.appendChild(el("div", (l === prog.my ? "👉 " : "") + l + " — " + LVD[i], "lvrow" + (l === prog.my ? " me" : ""))));
+}
 function renderLv(){
   const b = $("lvBar"); b.replaceChildren();
-  const lv = curLv(), r = prog.run.lv === lv ? prog.run : {good:0, bad:0};
-  b.appendChild(el("span", "🏅 Lv." + (LV.indexOf(prog.my) + 1) + " " + prog.my, "lvpill"));
-  const bits = [];
-  if(lv !== prog.my) bits.push("연습 단계: " + lv);
-  bits.push(r.bad > 0 ? "💧 연속 어려움 " + r.bad + "/3" : "🔥 연속 정답 " + r.good + "/3");
-  if(prog.recent.length) bits.push("최근 평균 " + Math.round(prog.recent.reduce((a, c) => a + c, 0) / prog.recent.length) + "점");
+  const pill = el("span", "🏅 " + prog.my + " ▾", "lvpill"); pill.onclick = () => { $("lvInfo").hidden = !$("lvInfo").hidden; };
+  b.appendChild(pill);
+  const n = prog.recent.length, bits = [];
+  if(curLv() !== prog.my) bits.push("연습 단계: " + curLv() + " (평균 미반영)");
+  bits.push(n ? "최근 " + n + "/20문장 평균 " + avgOf(prog.recent) + "점" : "아직 기록이 없어요");
   b.appendChild(el("span", bits.join(" · ")));
+  renderLvInfo();
 }
 function recordResult(score){
-  const lv = curLv();
-  if(prog.run.lv !== lv) prog.run = {lv, good:0, bad:0};
-  if(score >= 80){ prog.run.good++; prog.run.bad = 0; }
-  else if(score < 60){ prog.run.bad++; prog.run.good = 0; }
-  else { prog.run.good = 0; prog.run.bad = 0; }
-  prog.recent.unshift(score); prog.recent = prog.recent.slice(0, 10);
-  const kind = prog.run.good >= 3 ? "up" : prog.run.bad >= 3 ? "down" : null;
-  saveProg(); renderLv(); showLvNote(kind, lv);
+  if(curLv() !== prog.my) return;
+  prog.recent.unshift(score); prog.recent = prog.recent.slice(0, 20);
+  const avg = avgOf(prog.recent), n = prog.recent.length, i = LV.indexOf(prog.my);
+  let to = null;
+  if(avg >= 80 && i < LV.length - 1) to = LV[i + 1];
+  else if(avg <= 60 && i > 0) to = LV[i - 1];
+  if(!to){ saveProg(); renderLv(); return; }
+  const from = prog.my, up = LV.indexOf(to) > i;
+  prog.my = to; prog.recent = []; saveProg();
+  if($("lvlSel").value){ $("lvlSel").value = to; try{ localStorage.setItem(L.ek + ":lvl", to); }catch(e){} ensureLevelFolder(to); }
+  renderLv(); showLvPop(up, from, to, avg, n);
 }
-function dismissNote(k){ prog.run[k] = 0; saveProg(); renderLv(); $("lvNote").hidden = true; }
-function applyLevel(l){
-  prog.my = l; prog.run = {lv:l, good:0, bad:0}; saveProg();
-  if($("lvlSel").value){ $("lvlSel").value = l; try{ localStorage.setItem(L.ek + ":lvl", l); }catch(e){} ensureLevelFolder(l); }
-  renderLv();
-  const n = $("lvNote"); n.replaceChildren(el("div", "✓ 레벨을 " + l + "으로 바꿨어요. 이제 새 문장도 이 단계로 나와요.")); n.hidden = false;
+function showLvPop(up, from, to, avg, n){
+  $("popBox").className = "pop" + (up ? "" : " down");
+  $("popE").textContent = up ? "🎉" : "😢";
+  $("popT").textContent = up ? "레벨 업! 축하해요!" : "레벨 다운…";
+  $("popM").textContent = from + " → " + to;
+  $("popD").textContent = (up ? "최근 " + n + "문장 평균 " + avg + "점이에요. 정말 잘하고 있어요! 🎊" : "최근 " + n + "문장 평균 " + avg + "점이었어요. 아쉽지만 기초를 다지면 금방 다시 올라갈 수 있어요. 💪")
+    + "\n새 레벨 난이도: " + LVD[LV.indexOf(to)] + "\n확인을 누르면 새 레벨 문장으로 새로 시작해요.";
+  $("popD").style.whiteSpace = "pre-line";
+  $("lvPop").hidden = false;
 }
-function showLvNote(kind, lv){
-  const n = $("lvNote"); n.replaceChildren();
-  const i = LV.indexOf(lv);
-  const btn = (t, fn, ghost) => { const b = el("button", t, "sm" + (ghost ? " ghost" : "")); b.onclick = fn; return b; };
-  if(kind === "up"){
-    if(i >= LV.length - 1){ prog.run.good = 0; saveProg(); renderLv(); n.appendChild(el("div", "🏆 최고급에서 3문장 연속 정답! 가장 높은 단계예요.")); }
-    else {
-      const nx = LV[i + 1];
-      n.appendChild(el("div", "🎉 " + lv + " 단계에서 3문장 연속 정답이에요! " + nx + "으로 올려 볼까요?"));
-      n.append(btn(nx + "으로 올리기", () => applyLevel(nx)), btn("나중에", () => dismissNote("good"), true));
-    }
-  } else if(kind === "down"){
-    if(i <= 0){ prog.run.bad = 0; saveProg(); renderLv(); n.hidden = true; return; }
-    const pv = LV[i - 1];
-    n.appendChild(el("div", "💪 최근 3문장이 연속으로 어려웠어요. " + pv + "으로 한 단계 낮춰서 다져 볼까요?"));
-    n.append(btn(pv + "으로 낮추기", () => applyLevel(pv)), btn("계속 도전", () => dismissNote("bad"), true));
-  } else { n.hidden = true; return; }
-  n.hidden = false;
-}
+$("popOk").onclick = () => {
+  $("lvPop").hidden = true;
+  clearAll(); window.scrollTo({top:0, behavior:"smooth"});
+};
 function finalizeResult(r){
   const c = (v, mx) => Math.max(0, Math.min(mx, Math.round(Number(v))));
   const has = ["m", "g", "n"].every(k => r[k] !== undefined && r[k] !== null && r[k] !== "" && !isNaN(Number(r[k])));
@@ -1102,7 +1126,7 @@ function applyDir(nextDir, swapText){
   try{ localStorage.setItem("app:dir", dir); }catch(e){}
   if(swapText){ const tmp = $("ko").value; $("ko").value = $("en").value; $("en").value = tmp; fitAllBoxes(); }
   const isE2K = dir === "en2ko";
-  $("dirBtn").textContent = isE2K ? (L.name + " ↔ 한국어") : ("한국어 ↔ " + L.name);
+  $("dirBtn").textContent = isE2K ? (L.name[0] + "→한") : ("한→" + L.name[0]);
   $("srcBox").className = "fb " + (isE2K ? "en" : "ko");
   $("enBox").className = "fb " + (isE2K ? "ko" : "en");
   $("srcLabel").textContent = isE2K ? (L.flag + " " + L.name + " 문장") : "🇰🇷 한국어 문장";
@@ -1125,9 +1149,9 @@ function setLang(code){
   clearAll(); applyDir(dir, false); $("word").value = ""; $("dictOut").replaceChildren();
   folders = loadFolders(); curSel = "base"; openIds.clear(); Object.keys(pageOf).forEach(k => delete pageOf[k]);
   let savedLv = ""; try{ savedLv = localStorage.getItem(L.ek + ":lvl") || ""; }catch(e){}
-  $("lvlSel").value = LVL_GUIDE[savedLv] ? savedLv : "";
+  $("lvlSel").value = normLv(savedLv);
   if($("lvlSel").value) ensureLevelFolder($("lvlSel").value);
-  loadProg(); renderLv(); $("lvNote").hidden = true;
+  loadProg(); renderLv();
   closeSheet(); $("vfind").value = ""; $("vmsg").replaceChildren(); vOpen.clear(); renderVocab();
   dedupe(); renderHist();
 }
