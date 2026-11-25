@@ -223,7 +223,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 4.1</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 4.2</span><span>Made by 성원 아름</span></div>
 </main>
 
 <script>
@@ -533,7 +533,7 @@ function showExplain(){
   out.appendChild(el("span", r.correct ? "정확해요 👍" : "고칠 부분이 있어요", "tag " + (r.correct ? "ok" : "bad")));
   if(r.better){
     const tip = el("div", null, "fix");
-    tip.appendChild(el("div", "✨ 더 자연스러운 표현", "gh"));
+    tip.appendChild(el("div", "💡 이렇게 써도 좋아요!", "gh"));
     tip.appendChild(el("div", r.better));
     out.appendChild(tip);
   }
@@ -635,8 +635,8 @@ $("check").onclick = async () => {
   };
   try{
     const bodyPrompt = dir === "en2ko"
-      ? `원문 영어 문장: ${ko}\n학습자의 한국어 해석: ${en}\n\n학습자의 해석을 공정하고 일관되게 검토해 아래 JSON으로 답하라.\n중요 규칙:\n1) 학습자의 해석이 원문의 핵심 의미와 문맥을 정확히 전달하면 표현이 조금 달라도 반드시 "correct": true로 판정하라(정답이라고 무방한 문장을 억지로 틀렸다고 하지 마라).\n2) 정답이라도 원어민의 뉘앙스를 더 잘 살린 자연스러운 한국어 표현이 있다면 "better"에 제안해 주고, 없으면 빈 문자열 ""로 두어라.\n3) "points"에는 원문 앞에서부터 순서대로 핵심 문법·표현 포인트 2~3개를 넣되, 학습자 문장의 해당 부분("part")과 연결해서 설명하라. 맞았으면 "ok": true로 두고 "이 부분은 이런 문법을 잘 적용해서 해석했어요"처럼 칭찬·설명하고, 틀렸으면 "ok": false로 두고 "이 부분은 이때 이런 문법을 써서 해석하는 게 좋아요"처럼 이유와 힌트를 주되 정답 해석을 그대로 쓰지 마라.\n{"correct": true 또는 false,\n"better": "더 자연스러운 한국어 표현이 있으면 1문장 제안(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"원문 및 학습자 해석에서 해당하는 부분","ok": true 또는 false,"comment":"ok가 true면 잘 적용한 이유를, false면 왜 틀렸고 어떤 문법을 써야 하는지 차근차근 1~2문장 설명(false일 때 정답 직접 노출 금지)","hint":"ok가 false일 때만 힌트 1문장(true면 빈 문자열)","question":"ok가 false일 때만 유도 질문 1개(true면 빈 문자열)","example":{"en":"이 문장과 다른 주제의 쉬운 예문","ko":"한국어 번역"}}],\n"corrected": "가장 자연스럽고 정확한 한국어 해석(이미 좋으면 학습자 해석 그대로)",\n"why": ["해석 포인트와 이유를 한국어로 설명"]}`
-      : `한국어 문장: ${ko}\n학습자의 영어 번역: ${en}\n\n학습자의 번역을 공정하고 일관되게 검토해 아래 JSON으로 답하라.\n중요 규칙:\n1) 학습자의 문장이 문법적으로 옳고 한국어 뜻이 자연스럽게 통하면(정답이라고 무방한 수준이면) AI의 선호 표현과 조금 달라도 반드시 "correct": true로 판정하라. 올바른 답을 억지로 틀렸다고 하지 마라.\n2) "correct": true이더라도 원어민이 일상생활에서 더 자주 쓰는 세련되거나 자연스러운 표현이 있다면 "better"에 제안해 주어라(완벽하면 빈 문자열 "").\n3) "points"에는 이 문장의 핵심 문법·표현 포인트 2~3개를 문장 앞에서부터 순서대로 넣되, 반드시 학습자 문장의 해당 부분("part")과 같이 묶어서 설명하라. 해당 핵심 문법을 맞게 썼으면 "ok": true로 두고 "○○ 부분은 이 문법을 잘 적용했어요"처럼 칭찬과 원리를 설명하고, 틀렸거나 어색하면 "ok": false로 두고 "○○ 부분은 이때 이런 문법을 쓰는 게 좋아요"처럼 왜 틀렸는지 차근차근 설명하라(false일 때 정답 단어를 직접 노출하지 말고 힌트와 질문으로 유도).\n{"correct": true 또는 false,\n"better": "더 자연스러운 원어민 일상 표현 제안(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"학습자 문장에서 이 문법이 쓰인 실제 부분 인용","ok": true 또는 false,"comment":"ok가 true면 이 문법을 잘 적용했다는 칭찬+핵심 원리 1~2문장, false면 왜 틀렸고 어떤 문법/표현을 써야 하는지 1~2문장 설명(정답 직접 노출 금지)","hint":"ok가 false일 때만 스스로 고칠 수 있는 힌트 1문장(true면 빈 문자열)","question":"ok가 false일 때만 유도 질문 1개(true면 빈 문자열)","example":{"en":"이 문장과 다른 주제의 쉽고 자연스러운 예문","ko":"한국어 번역"}}],\n"corrected": "원어민이 일상생활에서 가장 자연스럽게 말하는 모범 문장",{READING}\n"why": ["문장 앞에서부터 순서대로, 핵심 수정 이유 또는 자연스러운 표현 포인트 설명"]}`;
+      ? `원문 영어 문장: ${ko}\n학습자의 한국어 해석: ${en}\n\n학습자의 해석을 공정하고 일관되게 검토해 아래 JSON으로 답하라.\n중요 규칙:\n1) 정답 기준은 너그럽게 적용하라: 말의 뜻이 자연스럽게 통하고 이상하지 않으면 사소한 조사나 어투가 달라도 무조건 "correct": true로 판정하라. 명백히 틀리거나 말이 안 될 때만 false로 하라.\n2) "correct": true일 때도 더 매끄러운 한국어 표현이 있다면 "better"에 "이렇게 써도 좋아요~" 느낌으로 부드럽게 조언하고, 없으면 빈 문자열 ""로 두어라.\n3) "points"에는 원문 앞에서부터 순서대로 핵심 문법·표현 포인트 2~3개를 넣되, 학습자 문장의 해당 부분("part")과 연결해서 설명하라. 맞았으면 "ok": true로 두고 "이 부분은 이런 문법을 잘 적용해서 해석했어요"처럼 칭찬·설명하고, 틀렸으면 "ok": false로 두고 "이 부분은 이때 이런 문법을 써서 해석하는 게 좋아요"처럼 이유와 힌트를 주되 정답 해석을 그대로 쓰지 마라.\n{"correct": true 또는 false,\n"better": "더 자연스러운 한국어 표현이 있으면 1문장 제안(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"원문 및 학습자 해석에서 해당하는 부분","ok": true 또는 false,"comment":"ok가 true면 잘 적용한 이유를, false면 왜 틀렸고 어떤 문법을 써야 하는지 차근차근 1~2문장 설명(false일 때 정답 직접 노출 금지)","hint":"ok가 false일 때만 힌트 1문장(true면 빈 문자열)","question":"ok가 false일 때만 유도 질문 1개(true면 빈 문자열)","example":{"en":"이 문장과 다른 주제의 쉬운 예문","ko":"한국어 번역"}}],\n"corrected": "가장 자연스럽고 정확한 한국어 해석(이미 좋으면 학습자 해석 그대로)",\n"why": ["해석 포인트와 이유를 한국어로 설명"]}`
+      : `한국어 문장: ${ko}\n학습자의 영어 번역: ${en}\n\n학습자의 번역을 공정하고 일관되게 검토해 아래 JSON으로 답하라.\n중요 규칙:\n1) 정답 기준은 깐깐하지 않고 너그럽게 적용하라: 원어민이 들었을 때 말이 이상하지 않고 의미가 잘 통하면(사소한 어휘 선택이나 어순 차이가 있어도) 무조건 "correct": true로 판정하라. 명백한 문법 오류나 의미가 어긋날 때만 false로 하라.\n2) "correct": true로 인정해 준 뒤, 더 자연스러운 일상 표현이 있다면 "better"에 "이렇게 써도 좋아요~" 식으로 부드럽게 조언해 주어라(완벽하면 빈 문자열 "").\n3) "points"에는 이 문장의 핵심 문법·표현 포인트 2~3개를 문장 앞에서부터 순서대로 넣되, 반드시 학습자 문장의 해당 부분("part")과 같이 묶어서 설명하라. 해당 핵심 문법을 맞게 썼으면 "ok": true로 두고 "○○ 부분은 이 문법을 잘 적용했어요"처럼 칭찬과 원리를 설명하고, 틀렸거나 어색하면 "ok": false로 두고 "○○ 부분은 이때 이런 문법을 쓰는 게 좋아요"처럼 왜 틀렸는지 차근차근 설명하라(false일 때 정답 단어를 직접 노출하지 말고 힌트와 질문으로 유도).\n{"correct": true 또는 false,\n"better": "더 자연스러운 원어민 일상 표현 제안(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"학습자 문장에서 이 문법이 쓰인 실제 부분 인용","ok": true 또는 false,"comment":"ok가 true면 이 문법을 잘 적용했다는 칭찬+핵심 원리 1~2문장, false면 왜 틀렸고 어떤 문법/표현을 써야 하는지 1~2문장 설명(정답 직접 노출 금지)","hint":"ok가 false일 때만 스스로 고칠 수 있는 힌트 1문장(true면 빈 문자열)","question":"ok가 false일 때만 유도 질문 1개(true면 빈 문자열)","example":{"en":"이 문장과 다른 주제의 쉽고 자연스러운 예문","ko":"한국어 번역"}}],\n"corrected": "원어민이 일상생활에서 가장 자연스럽게 말하는 모범 문장",{READING}\n"why": ["문장 앞에서부터 순서대로, 핵심 수정 이유 또는 자연스러운 표현 포인트 설명"]}`;
     const prompt = fill(SYS + "\n\n" + bodyPrompt);
     const r = await sample.json(prompt, onStream, msg => { $("exOut").className = "muted"; $("exOut").textContent = msg; });
     const prev = load();
@@ -696,7 +696,7 @@ $("recheck").onclick = async () => {
     const isE2K = (cur.dir || "ko2en") === "en2ko";
     const r = await ask(isE2K
       ? `원문 영어 문장: ${cur.ko}\n모범 한국어 해석: ${cur.r.corrected}\n학습자가 다시 쓴 한국어 해석: ${t}\n\n학습자의 해석이 원문의 뜻을 자연스럽고 정확하게 옮겼는지 판단하라(모범 답안과 표현이 달라도 뜻이 정확하면 정답). JSON으로 답하라.\n{"correct": true 또는 false, "feedback": "한국어로 짧은 피드백. 틀렸다면 모범 해석을 직접 말하지 말고 힌트로만 알려준다. 맞다면 칭찬한다."}`
-      : `한국어 문장: ${cur.ko}\n모범 답안: ${cur.r.corrected}\n학습자가 다시 쓴 문장: ${t}\n\n학습자의 문장이 한국어 문장의 뜻을 문법적으로 올바르게 옮겼는지 판단하라(모범 답안과 달라도 맞으면 정답). JSON으로 답하라.\n{"correct": true 또는 false, "feedback": "한국어로 짧은 피드백. 틀렸다면 정답이나 올바른 형태를 직접 말하지 말고, 이전보다 나아진 점과 아직 다시 볼 부분을 힌트로만 알려준다. 맞다면 칭찬하고 더 자연스러운 표현이 있으면 알려준다."}`);
+      : `한국어 문장: ${cur.ko}\n모범 답안: ${cur.r.corrected}\n학습자가 다시 쓴 문장: ${t}\n\n학습자의 문장이 말이 이상하지 않고 뜻이 자연스럽게 통하면 너그럽게 정답(true)으로 인정하라(모범 답안과 달라도 뜻이 통하면 정답). JSON으로 답하라.\n{"correct": true 또는 false, "feedback": "한국어로 짧은 피드백. 틀렸다면 정답이나 올바른 형태를 직접 말하지 말고, 이전보다 나아진 점과 아직 다시 볼 부분을 힌트로만 알려준다. 맞다면 칭찬하고 더 자연스러운 표현이 있으면 알려준다."}`);
     const o = $("reOut"); o.replaceChildren();
     o.appendChild(el("span", r.correct ? "정답이에요 🎉" : "조금만 더!", "tag " + (r.correct ? "ok" : "bad")));
     o.appendChild(el("div", r.feedback));
