@@ -147,6 +147,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
     <option value="초급">초급</option>
     <option value="중급">중급</option>
     <option value="고급">고급</option>
+    <option value="최고급">최고급</option>
   </select>
 </div>
 <div class="srow">
@@ -223,7 +224,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 4.2</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 4.3</span><span>Made by 성원 아름</span></div>
 </main>
 
 <script>
@@ -439,12 +440,13 @@ $("addFolder").onclick = () => {
 };
 $("fsel").onchange = () => { curSel = $("fsel").value; };
 const LVL_GUIDE = {
-  "초급": "[길이] 외국어 기준 5~8단어(한중일 10~15자)의 짧은 단문 1개. [어휘] 기초 일상 단어만 사용(숙어·추상어 금지). [문법] 단순 현재·과거 시제의 기본 주어+동사(+목적어/장소)만 사용.",
-  "중급": "[길이] 외국어 기준 11~15단어(한중일 20~28자). [어휘] 일상 회화 핵심 어휘와 동사구 사용. [문법] 초급의 기본 시제·어순을 바탕으로 이유/시간/조건 접속사, 비교급, to부정사/동명사, 현재완료 중 1~2가지를 결합.",
-  "고급": "[길이] 외국어 기준 17~24단어(한중일 30~44자)의 긴 복문. [어휘] 세련된 형용사·부사·추상/관용 표현 사용. [문법] 초급·중급에서 익힌 문법(시제·접속사·부정사 등)을 토대로 관계사절, 분사구문, 가정법, 수동태 중 2가지 이상을 결합."
+  "초급": "[길이] 외국어 기준 4~7단어(한중일 8~13자)의 아주 짧은 단문 1개. [어휘] 가장 쉬운 기초 일상 단어만 사용(어려운 단어·숙어 금지). [문법] 단순 현재·과거 시제의 기본 문장만 사용(접속사·관계사·수동태 금지).",
+  "중급": "[길이] 외국어 기준 8~11단어(한중일 14~20자). [어휘] 흔히 쓰는 쉬운 일상 회화 단어만 사용(어려운 한자어나 추상어 금지). [문법] 초급 기본 시제에 쉬운 접속사(because/when/if), 조동사, 비교급, want to 중 딱 1가지만 가볍게 추가.",
+  "고급": "[길이] 외국어 기준 12~16단어(한중일 22~30자). [어휘] 일상·업무에서 자주 쓰는 표현과 기본 동사구 사용. [문법] 초급·중급 문법을 바탕으로 현재완료, 수동태, 관계대명사, to부정사/동명사 중 1~2가지를 자연스럽게 활용.",
+  "최고급": "[길이] 외국어 기준 17~24단어(한중일 30~44자)의 긴 복문. [어휘] 세련된 형용사·부사·추상/관용 표현 적극 사용. [문법] 하위 등급에서 익힌 문법 위에 관계사절, 분사구문, 가정법, 수동태 중 2가지 이상을 결합."
 };
 function getLowerLearned(lv){
-  const lowerNames = lv === "고급" ? ["초급", "중급"] : lv === "중급" ? ["초급"] : [];
+  const lowerNames = lv === "최고급" ? ["초급", "중급", "고급"] : lv === "고급" ? ["초급", "중급"] : lv === "중급" ? ["초급"] : [];
   if(!lowerNames.length) return "";
   const lowerIds = new Set(folders.filter(f => lowerNames.includes(f.name)).map(f => f.id));
   const items = load().filter(x => lowerIds.has(x.fid));
