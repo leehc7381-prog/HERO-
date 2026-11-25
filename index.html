@@ -102,6 +102,21 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 .cbtn button{margin:0;padding:5px 10px;font-size:12.5px;border-radius:8px}
 .line{display:flex;gap:8px}
 .line button{margin:0}
+.w{cursor:pointer;border-radius:4px;-webkit-tap-highlight-color:transparent}
+.w:active,.w.on{background:var(--hl);color:var(--acc)}
+#wsheet{position:fixed;left:0;right:0;bottom:0;z-index:60;background:var(--card);border-top:1px solid var(--line);padding:10px 16px calc(10px + env(safe-area-inset-bottom,0px));box-shadow:0 -4px 16px rgba(0,0,0,.12)}
+#wsheet .in{max-width:640px;margin:0 auto}
+.wrow{display:flex;gap:6px;align-items:center}
+.wrow input{flex:1;min-width:0;height:36px;padding:0 10px}
+.wrow button{margin:0;height:36px;padding:0 12px;font-size:13px;white-space:nowrap}
+#wmsg{margin-top:6px;font-size:14px}
+#wmsg:empty{display:none}
+body.ws main{padding-bottom:190px}
+.vx{margin:6px 0;padding-left:8px;border-left:3px solid var(--line)}
+.vt{display:flex;gap:8px;align-items:flex-start}
+.vt .vf{flex:1}
+.vt button{margin:0;padding:2px 8px;font-size:12px}
+.vm{font-size:14px;margin:4px 0}
 </style>
 </head>
 <body>
@@ -180,6 +195,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 
 <section class="card">
 <div class="step">2단계</div><h2>해설과 질문</h2>
+<p class="muted" style="margin:0 0 8px;font-size:12.5px">💡 해설 속 단어를 누르거나 길게 눌러 선택하면 단어장에 담을 수 있어요.</p>
 <div id="exOut" class="muted">검사하기를 누르면 여기에 해설이 나와요.</div>
 <div style="border-top:1px solid var(--line);margin:16px 0 10px"></div>
 <h2>💬 궁금한 점 질문하기</h2>
@@ -217,6 +233,15 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 
 <button id="newStudy" style="width:100%;margin:0 0 14px;padding:14px">✏️ 새 문장 학습하기</button>
 
+<details class="card box" id="vbox">
+<summary><span>📒 단어장<span class="cnt" id="vcnt">0</span></span></summary>
+<p class="muted" style="margin:10px 0 0;font-size:12.5px">해설이나 예문 속 단어를 누르거나 길게 눌러 선택하면 여기에 담을 수 있어요.</p>
+<div class="fline"><input type="text" id="vnew" placeholder="단어 직접 추가"><button id="vadd">추가</button></div>
+<div id="vmsg" class="muted" style="margin-top:6px"></div>
+<div class="fline"><input type="text" id="vfind" placeholder="단어장에서 찾기"></div>
+<div id="vlist" class="muted" style="margin-top:8px"></div>
+</details>
+
 <details class="card box" id="box">
 <summary><span>🗄️ 학습 보관함<span class="cnt" id="cnt">0</span></span></summary>
 <div id="hist" class="muted">아직 저장된 기록이 없어요. 검사하면 자동으로 저장돼요.</div>
@@ -224,8 +249,13 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 4.4</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 4.5</span><span>Made by 성원 아름</span></div>
 </main>
+
+<div id="wsheet" hidden><div class="in">
+  <div class="wrow"><input type="text" id="wpick" aria-label="선택한 단어"><button id="wadd">📒 단어장에 추가</button><button id="wx" class="ghost" title="닫기">✕</button></div>
+  <div id="wmsg" class="muted"></div>
+</div></div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -575,6 +605,7 @@ function showExplain(){
   $("retrySrc").hidden = false;
   $("retrySrcLabel").textContent = ((cur.dir || "ko2en") === "en2ko") ? ("📝 해석할 " + L.name + " 문장") : "📝 번역할 한국어 문장";
   $("retrySrcText").textContent = cur.ko;
+  wrapWords($("retrySrcText")); wrapWords(out);
   $("listenIdle").hidden = true;
   $("listenGenRow").hidden = false;
   $("speakRow").hidden = true;
@@ -586,6 +617,7 @@ function showAnswer(){
   if(!cur.revealed) return;
   a.appendChild(el("div","정답","sec")); a.appendChild(el("div", cur.r.corrected, "fix")); if(cur.r.reading) a.appendChild(el("div", cur.r.reading, "muted"));
   if(cur.r.why && cur.r.why.length){ a.appendChild(el("div","이렇게 고친 이유","sec")); a.appendChild(olist(cur.r.why)); }
+  wrapWords(a);
 }
 function fitBox(el){
   if(!el) return;
@@ -667,6 +699,7 @@ const clearAll = () => { cur = null; openedId = null; renderQA(); $("ansIdle").h
 function renderQA(){
   const log = $("qaLog"); log.replaceChildren();
   ((cur && cur.qa) || []).forEach(m => log.appendChild(el("div", m.content, "qm " + (m.role === "user" ? "me" : "ai"))));
+  wrapWords(log);
 }
 $("askBtn").onclick = async () => {
   const q = $("qa").value.trim();
@@ -705,12 +738,182 @@ $("recheck").onclick = async () => {
       : `한국어 문장: ${cur.ko}\n모범 답안: ${cur.r.corrected}\n학습자가 다시 쓴 문장: ${t}\n\n학습자의 문장이 말이 이상하지 않고 뜻이 자연스럽게 통하면 너그럽게 정답(true)으로 인정하라(모범 답안과 달라도 뜻이 통하면 정답). JSON으로 답하라.\n{"correct": true 또는 false, "feedback": "한국어로 짧은 피드백. 틀렸다면 정답이나 올바른 형태를 직접 말하지 말고, 이전보다 나아진 점과 아직 다시 볼 부분을 힌트로만 알려준다. 맞다면 칭찬하고 더 자연스러운 표현이 있으면 알려준다."}`);
     const o = $("reOut"); o.replaceChildren();
     o.appendChild(el("span", r.correct ? "정답이에요 🎉" : "조금만 더!", "tag " + (r.correct ? "ok" : "bad")));
-    o.appendChild(el("div", r.feedback));
+    o.appendChild(el("div", r.feedback)); wrapWords(o);
     cur.retry = t; if(r.correct) cur.solved = true; saveCur();
   }catch(e){
     $("reOut").textContent = "확인하지 못했어요. 다시 시도해 주세요.";
   }finally{ $("recheck").disabled = false; }
 };
+
+/* ---- 단어장 ---- */
+let LC = "en", VK = "es:vocab", sheetCtx = "", selT = null;
+const vOpen = new Set();
+const WRE = {
+  en: "[A-Za-z]{2,}(?:['’-][A-Za-z]+)*",
+  es: "[A-Za-zÁÉÍÓÚÜÑáéíóúüñ]{2,}(?:['’-][A-Za-zÁÉÍÓÚÜÑáéíóúüñ]+)*"
+};
+const PICK = "#exOut,#ansOut,#qaLog,#dictOut,#retrySrc,#reOut,#vlist";
+const loadV = () => { try{ return JSON.parse(localStorage.getItem(VK)) || []; }catch(e){ return []; } };
+const saveV = a => { try{ localStorage.setItem(VK, JSON.stringify(a)); }catch(e){} };
+function wrapWords(root){
+  const src = WRE[LC]; if(!root || !src) return;
+  const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
+  while(walker.nextNode()) nodes.push(walker.currentNode);
+  nodes.forEach(n => {
+    const par = n.parentNode;
+    if(!par || (par.closest && par.closest(".w,button,summary,textarea,input,select"))) return;
+    const t = n.nodeValue, re = new RegExp(src, "g");
+    if(!re.test(t)) return;
+    re.lastIndex = 0;
+    const f = document.createDocumentFragment(); let last = 0, m;
+    while((m = re.exec(t))){
+      if(m.index > last) f.appendChild(document.createTextNode(t.slice(last, m.index)));
+      f.appendChild(el("span", m[0], "w")); last = m.index + m[0].length;
+    }
+    if(last < t.length) f.appendChild(document.createTextNode(t.slice(last)));
+    par.replaceChild(f, n);
+  });
+}
+function openSheet(text, node){
+  const vx = node && node.closest ? node.closest(".vx") : null;
+  if(vx) sheetCtx = (vx.querySelector(".vf") || vx).textContent;
+  else if(node && node.closest && node.closest("#vlist")) sheetCtx = "";
+  else sheetCtx = (cur && cur.r) ? (((cur.dir || "ko2en") === "en2ko") ? cur.ko : (cur.r.corrected || "")) : "";
+  $("wpick").value = text.trim(); $("wmsg").replaceChildren(); $("wadd").disabled = false;
+  $("wsheet").hidden = false; document.body.classList.add("ws");
+}
+function closeSheet(){
+  $("wsheet").hidden = true; document.body.classList.remove("ws");
+  document.querySelectorAll(".w.on").forEach(x => x.classList.remove("on"));
+}
+document.addEventListener("click", e => {
+  const w = e.target.closest && e.target.closest(".w");
+  if(!w || !w.closest(PICK)) return;
+  const sel = window.getSelection && window.getSelection();
+  if(sel && !sel.isCollapsed) return;
+  document.querySelectorAll(".w.on").forEach(x => x.classList.remove("on")); w.classList.add("on");
+  openSheet(w.textContent, w);
+});
+document.addEventListener("selectionchange", () => {
+  clearTimeout(selT);
+  selT = setTimeout(() => {
+    const s = window.getSelection(); if(!s || s.isCollapsed || !s.anchorNode) return;
+    const t = s.toString().trim();
+    if(!t || t.length > 40 || /\n/.test(t)) return;
+    const n = s.anchorNode.nodeType === 3 ? s.anchorNode.parentElement : s.anchorNode;
+    if(!n || !n.closest || !n.closest(PICK)) return;
+    openSheet(t, n);
+  }, 350);
+});
+function vocabPrompt(w, ctx, have, n){
+  return `영어 단어/표현 "${w}"를 단어장 항목으로 정리하라.` +
+    (ctx ? `\n참고 문장(이 단어가 쓰인 문장. 뜻을 고를 때만 참고하고 예문으로 그대로 베끼지 마라): ${ctx}` : "") +
+    (have ? `\n이미 있는 예문(겹치지 않는 새 예문을 쓸 것): ${have}` : "") +
+    `\n규칙:\n- 활용형이면 원형을 "word"에 쓴다. 입력이 한국어면 가장 자연스러운 영어 표현 하나를 "word"로 쓴다.\n- "meaning"은 쉬운 한국어로 간결하게(참고 문장이 있으면 그 문맥의 뜻을 먼저).\n- "ex"는 원어민이 일상에서 실제로 쓰는 자연스럽고 쉬운 예문 ${n}개. 모두 이 단어를 포함하고 서로 다른 상황·쓰임이어야 한다.\n- 예문의 한국어 해석("ko")은 직역투가 아닌 자연스러운 말로.\nJSON만 출력:\n{"word":"표제어","pron":"{PRON}","pos":"품사(한국어)","meaning":"한국어 뜻","ex":[{"fl":"영어 예문","ko":"한국어 해석"}]}`;
+}
+const cleanEx = arr => (arr || []).filter(e => e && e.fl).map(e => ({fl:String(e.fl), ko:String(e.ko || "")}));
+async function addWord(raw, ctx){
+  const w = raw.trim().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
+  if(!w) return {status:"empty"};
+  const same = (a, b) => a.toLowerCase() === b.toLowerCase();
+  let found = loadV().find(x => same(x.w, w));
+  if(found) return {status:"dup", item:found};
+  let r = null;
+  try{ r = await ask(vocabPrompt(w, ctx, "", 3)); }catch(e){ r = null; }
+  const all = loadV();
+  const lemma = String((r && r.word) || w).trim();
+  found = all.find(x => same(x.w, lemma));
+  if(found) return {status:"dup", item:found};
+  const item = {id:uid(), w:lemma, pron:(r && r.pron) || "", pos:(r && r.pos) || "", meaning:(r && r.meaning) || "", ex:cleanEx(r && r.ex).slice(0, 3), t:Date.now()};
+  all.unshift(item); saveV(all); renderVocab();
+  return {status: r ? "ok" : "bare", item};
+}
+function openVocab(id){
+  closeSheet(); $("vbox").open = true; vOpen.add(id); $("vfind").value = ""; renderVocab();
+  $("vbox").scrollIntoView({behavior:"smooth", block:"start"});
+}
+function resultNode(res, noOpen){
+  const d = el("div");
+  if(res.status === "empty"){ d.textContent = "단어를 입력해 주세요."; return d; }
+  d.appendChild(el("div", res.status === "dup" ? "이미 단어장에 있어요 📒" : res.status === "bare" ? "✓ 단어만 저장했어요. 뜻과 예문은 단어장에서 ‘예문 만들기’를 눌러 채울 수 있어요." : "✓ 단어장에 저장했어요"));
+  const x = res.item;
+  if(x){
+    const head = [x.w, x.pos ? "(" + x.pos + ")" : "", x.meaning ? "— " + x.meaning : ""].filter(Boolean).join(" ");
+    d.appendChild(el("div", head, "vm"));
+    if(x.ex && x.ex[0]){ d.appendChild(el("div", x.ex[0].fl, "muted")); d.appendChild(el("div", x.ex[0].ko, "muted")); }
+    if(!noOpen){ const b = el("button", "단어장에서 보기", "ghost sm"); b.onclick = () => openVocab(x.id); d.appendChild(b); }
+  }
+  return d;
+}
+async function fillVocab(x, btn){
+  btn.disabled = true; btn.textContent = "만드는 중…";
+  try{
+    const have = (x.ex || []).map(e => e.fl).join(" / ");
+    const r = await ask(vocabPrompt(x.w, "", have, (x.ex && x.ex.length) ? 2 : 3));
+    const all = loadV(), t = all.find(y => y.id === x.id);
+    if(t){
+      if(!t.meaning && r.meaning) t.meaning = r.meaning;
+      if(!t.pron && r.pron) t.pron = r.pron;
+      if(!t.pos && r.pos) t.pos = r.pos;
+      const seen = new Set((t.ex || []).map(e => e.fl.toLowerCase()));
+      t.ex = (t.ex || []).concat(cleanEx(r.ex).filter(e => !seen.has(e.fl.toLowerCase()))).slice(0, 8);
+      saveV(all);
+    }
+    renderVocab();
+  }catch(e){ btn.disabled = false; btn.textContent = "다시 시도"; }
+}
+function renderVocab(){
+  const all = loadV(), box = $("vlist"); $("vcnt").textContent = all.length;
+  const q = $("vfind").value.trim().toLowerCase();
+  const items = q ? all.filter(x => (x.w + " " + (x.meaning || "")).toLowerCase().includes(q)) : all;
+  box.replaceChildren();
+  if(!items.length){ box.className = "muted"; box.textContent = all.length ? "찾는 단어가 없어요." : "아직 단어가 없어요. 해설 속 단어를 눌러 담아 보세요."; return; }
+  box.className = "";
+  items.forEach(x => {
+    const r = mk("details", {className:"row"}); r.open = vOpen.has(x.id);
+    r.addEventListener("toggle", () => { r.open ? vOpen.add(x.id) : vOpen.delete(x.id); });
+    const k = el("summary", null, "k"), kt = el("span");
+    kt.appendChild(document.createTextNode(x.w));
+    if(x.pos) kt.appendChild(el("span", x.pos, "badge"));
+    if(x.meaning) kt.appendChild(el("span", " · " + x.meaning, "e"));
+    k.appendChild(kt); r.appendChild(k);
+    if(x.pron) r.appendChild(el("div", x.pron, "e"));
+    if(x.meaning) r.appendChild(el("div", x.meaning, "vm"));
+    if(x.ex && x.ex.length){
+      r.appendChild(el("div", "📝 예문", "gh"));
+      x.ex.forEach(e => {
+        const d = el("div", null, "vx"), t = el("div", null, "vt");
+        t.appendChild(el("div", e.fl, "vf"));
+        const sp = el("button", "🔊", "ghost"); sp.onclick = () => speak(e.fl, 0.95); t.appendChild(sp);
+        d.appendChild(t); if(e.ko) d.appendChild(el("div", e.ko, "muted")); r.appendChild(d);
+      });
+    } else r.appendChild(el("div", "아직 예문이 없어요.", "muted"));
+    const br = el("div", null, "srow");
+    const sw = el("button", "🔊 단어 듣기", "ctl"); sw.onclick = () => speak(x.w, 0.9);
+    const mb = el("button", (x.ex && x.ex.length) ? "＋ 예문 더 만들기" : "예문 만들기", "ctl"); mb.onclick = () => fillVocab(x, mb);
+    const dl = el("button", "삭제", "ctl");
+    dl.onclick = () => { if(!dl.dataset.s){ dl.dataset.s = 1; dl.textContent = "정말 삭제할까요?"; return; } saveV(loadV().filter(y => y.id !== x.id)); renderVocab(); };
+    br.append(sw, mb, dl); r.appendChild(br); box.appendChild(r);
+  });
+  wrapWords(box);
+}
+$("wx").onclick = closeSheet;
+$("wadd").onclick = async () => {
+  const w = $("wpick").value.trim(); if(!w) return;
+  $("wadd").disabled = true; $("wmsg").replaceChildren(el("span", "정리하는 중…", "muted"));
+  const res = await addWord(w, sheetCtx);
+  $("wmsg").replaceChildren(resultNode(res)); $("wadd").disabled = false;
+  const sel = window.getSelection && window.getSelection(); if(sel) sel.removeAllRanges();
+  document.querySelectorAll(".w.on").forEach(x => x.classList.remove("on"));
+};
+$("wpick").addEventListener("keydown", e => { if(e.key === "Enter") $("wadd").click(); });
+$("vadd").onclick = async () => {
+  const w = $("vnew").value.trim(); if(!w) return;
+  $("vadd").disabled = true; $("vmsg").replaceChildren(el("span", "정리하는 중…"));
+  const res = await addWord(w, ""); $("vnew").value = ""; $("vmsg").replaceChildren(resultNode(res, true)); $("vadd").disabled = false;
+};
+$("vnew").addEventListener("keydown", e => { if(e.key === "Enter") $("vadd").click(); });
+$("vfind").addEventListener("input", renderVocab);
 
 /* ---- 단어사전 ---- */
 async function lookup(){
@@ -734,6 +937,12 @@ async function lookup(){
       }
       out.appendChild(row);
     });
+    if(!isKo){
+      const sv = el("button", "📒 단어장에 저장", "ghost sm"), sm = el("div", null, "muted");
+      sv.onclick = async () => { sv.disabled = true; sm.replaceChildren(el("span", "정리하는 중…")); const res = await addWord(r.word || w, ""); sm.replaceChildren(resultNode(res)); sv.disabled = false; };
+      out.append(sv, sm);
+    }
+    wrapWords(out);
   }catch(e){ out.textContent = "단어를 찾지 못했어요. 다시 시도해 주세요."; }
   finally{ $("lookup").disabled = false; }
 }
@@ -782,7 +991,7 @@ $("dirBtn").onclick = () => { applyDir(dir === "ko2en" ? "en2ko" : "ko2en", true
 function setLang(code){
   L = LANGS[code] || LANGS.en; code = LANGS[code] ? code : "en";
   try{ localStorage.setItem("app:lang", code); }catch(e){}
-  KEY = L.ek + ":entries"; FK = L.ek + ":folders";
+  KEY = L.ek + ":entries"; FK = L.ek + ":folders"; VK = L.ek + ":vocab"; LC = code;
   document.title = "HERO"; $("ttl").textContent = L.name + " 문장 학습";
   $("word").placeholder = L.name + " 또는 한국어"; $("qa").placeholder = L.qa;
   $("langSel").value = code;
@@ -791,6 +1000,7 @@ function setLang(code){
   let savedLv = ""; try{ savedLv = localStorage.getItem(L.ek + ":lvl") || ""; }catch(e){}
   $("lvlSel").value = LVL_GUIDE[savedLv] ? savedLv : "";
   if($("lvlSel").value) ensureLevelFolder($("lvlSel").value);
+  closeSheet(); $("vfind").value = ""; $("vmsg").replaceChildren(); vOpen.clear(); renderVocab();
   dedupe(); renderHist();
 }
 $("langSel").onchange = () => setLang($("langSel").value);
