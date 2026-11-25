@@ -117,11 +117,26 @@ body.ws main{padding-bottom:190px}
 .vt .vf{flex:1}
 .vt button{margin:0;padding:2px 8px;font-size:12px}
 .vm{font-size:14px;margin:4px 0}
+.srow.sel3{flex-wrap:nowrap;gap:6px}
+.srow.sel3 select.ctl{flex:1 1 0;min-width:0;padding:0 20px 0 8px;font-size:12.5px;text-overflow:ellipsis;background-position:calc(100% - 12px) 14px,calc(100% - 7px) 14px}
+.srow.btn2 .ctl{flex:1}
+.w.ph{border-bottom:1.5px dotted var(--acc)}
+.chip{display:inline-block;margin:3px 6px 3px 0;padding:2px 10px;border:1px solid var(--line);border-radius:99px;font-size:14px}
+.lvbar{display:flex;flex-wrap:wrap;gap:4px 10px;align-items:center;margin:2px 0 12px;font-size:12.5px;color:var(--sub)}
+.lvpill{font-weight:700;padding:2px 10px;border-radius:99px;background:var(--hl);color:var(--acc);font-size:13px}
+.score{--c:var(--ok);margin:8px 0}
+.score.mid{--c:#d99a1c}.score.bad{--c:var(--bad)}
+.score .sn{font-size:22px;font-weight:800;color:var(--c)}
+.score .sd{font-size:12.5px;color:var(--sub);margin-left:8px}
+.meter{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:4px 0 2px}
+.meter>i{display:block;height:100%;border-radius:99px;background:var(--c)}
+#lvNote{margin:0 0 10px}
 </style>
 </head>
 <body>
 <main>
 <div class="top"><h1 id="ttl">영어 문장 학습</h1><div class="topr"><select id="langSel" class="lang"><option value="en">🇺🇸 영어</option><option value="es">🇪🇸 스페인어</option><option value="ja">🇯🇵 일본어</option><option value="zh">🇨🇳 중국어(간체)</option></select><button id="gearBtn" class="lang" title="AI 키 설정">🔑</button></div></div>
+<div class="lvbar" id="lvBar"></div>
 <p class="lead" id="lead">한국어 문장을 적고 영어로 번역해 보세요. 정답은 바로 알려드리지 않고, 스스로 찾도록 안내해 드릴게요.</p>
 <p class="muted" style="font-size:12.5px;margin:-10px 0 14px">🔑 처음 사용 시 우측 상단 열쇠 버튼을 눌러 API 키를 등록해 주세요.</p>
 
@@ -151,34 +166,31 @@ body.ws main{padding-bottom:190px}
 
 <section class="card">
 <div class="step">1단계</div><h2>문장 쓰고 번역하기</h2>
-<div class="srow" style="justify-content:space-between">
-  <div class="cbtn"><span class="muted">📁 폴더</span><select id="fsel"></select></div>
+<div class="srow sel3">
+  <select id="fsel" class="ctl" aria-label="폴더"></select>
+  <select id="lvlSel" class="ctl" aria-label="난이도">
+    <option value="">🎯 내 레벨</option>
+    <option value="왕초급">🎯 왕초급</option>
+    <option value="초급">🎯 초급</option>
+    <option value="중급">🎯 중급</option>
+    <option value="고급">🎯 고급</option>
+    <option value="최고급">🎯 최고급</option>
+  </select>
+  <select id="topicSel" class="ctl" aria-label="주제">
+    <option value="랜덤">🏷️ 랜덤</option>
+    <option value="일상생활">🏷️ 일상생활</option>
+    <option value="여행·교통">🏷️ 여행·교통</option>
+    <option value="음식·카페">🏷️ 음식·카페</option>
+    <option value="직장·비즈니스">🏷️ 직장·비즈니스</option>
+    <option value="쇼핑·결제">🏷️ 쇼핑·결제</option>
+    <option value="감정·관계">🏷️ 감정·관계</option>
+    <option value="취미·여가">🏷️ 취미·여가</option>
+    <option value="건강·병원">🏷️ 건강·병원</option>
+    <option value="시사·사회">🏷️ 시사·사회</option>
+  </select>
+</div>
+<div class="srow btn2">
   <button id="dirBtn" type="button" class="ctl" title="한국어와 외국어 입력 방향 바꾸기">한국어 ↔ 영어</button>
-</div>
-<div class="srow">
-  <span class="muted">🎯 난이도</span>
-  <select id="lvlSel" class="ctl" aria-label="난이도 선택">
-    <option value="">직접 입력</option>
-    <option value="초급">초급</option>
-    <option value="중급">중급</option>
-    <option value="고급">고급</option>
-    <option value="최고급">최고급</option>
-  </select>
-</div>
-<div class="srow">
-  <span class="muted">🏷️ 주제</span>
-  <select id="topicSel" class="ctl" aria-label="주제 선택">
-    <option value="랜덤">랜덤</option>
-    <option value="일상생활">일상생활</option>
-    <option value="여행·교통">여행·교통</option>
-    <option value="음식·카페">음식·카페</option>
-    <option value="직장·비즈니스">직장·비즈니스</option>
-    <option value="쇼핑·결제">쇼핑·결제</option>
-    <option value="감정·관계">감정·관계</option>
-    <option value="취미·여가">취미·여가</option>
-    <option value="건강·병원">건강·병원</option>
-    <option value="시사·사회">시사·사회</option>
-  </select>
   <button id="genSent" type="button" class="ctl">✨ 문장 제시</button>
 </div>
 <div class="fb ko" id="srcBox"><label for="ko" id="srcLabel">🇰🇷 한국어 문장</label>
@@ -196,6 +208,7 @@ body.ws main{padding-bottom:190px}
 <section class="card">
 <div class="step">2단계</div><h2>해설과 질문</h2>
 <p class="muted" style="margin:0 0 8px;font-size:12.5px">💡 해설 속 단어를 누르거나 길게 눌러 선택하면 단어장에 담을 수 있어요.</p>
+<div id="lvNote" class="gbox" hidden></div>
 <div id="exOut" class="muted">검사하기를 누르면 여기에 해설이 나와요.</div>
 <div style="border-top:1px solid var(--line);margin:16px 0 10px"></div>
 <h2>💬 궁금한 점 질문하기</h2>
@@ -249,7 +262,7 @@ body.ws main{padding-bottom:190px}
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 4.5</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 4.6</span><span>Made by 성원 아름</span></div>
 </main>
 
 <div id="wsheet" hidden><div class="in">
@@ -414,7 +427,7 @@ function mk(tag, props){ const e = document.createElement(tag); Object.assign(e,
 function saveFolders(){ try{ localStorage.setItem(FK, JSON.stringify(folders)); }catch(e){} }
 function refreshSel(){
   const s = $("fsel"); if(!s) return; s.replaceChildren();
-  folders.forEach(f => s.appendChild(mk("option", {value:f.id, textContent:f.name})));
+  folders.forEach(f => s.appendChild(mk("option", {value:f.id, textContent:"📁 " + f.name})));
   if(!folders.some(f => f.id === curSel)) curSel = "base"; s.value = curSel;
 }
 function renderHist(){
@@ -444,7 +457,7 @@ function renderHist(){
     items.slice(pg * PER, pg * PER + PER).forEach(x => {
       const r = mk("details", {className:"row"});
       const k = el("summary", x.ko, "k");
-      k.appendChild(el("span", x.solved ? "✓ 해결" : (x.revealed ? "정답 확인" : "공부 중"), "badge" + (x.solved ? " ok" : ""))); r.appendChild(k);
+      k.appendChild(el("span", (x.score != null ? x.score + "점 · " : "") + (x.solved ? "✓ 해결" : (x.revealed ? "정답 확인" : "공부 중")), "badge" + (x.solved ? " ok" : ""))); r.appendChild(k);
       if(x.revealed) r.appendChild(el("div", "정답: " + x.r.corrected, "e"));
       r.appendChild(el("div", new Date(x.t).toLocaleDateString("ko-KR"), "e"));
       const br = el("div", null, "srow");
@@ -470,13 +483,14 @@ $("addFolder").onclick = () => {
 };
 $("fsel").onchange = () => { curSel = $("fsel").value; };
 const LVL_GUIDE = {
-  "초급": "[길이] 외국어 기준 4~7단어(한중일 8~13자)의 아주 짧은 단문 1개. [어휘] 가장 쉬운 기초 일상 단어만 사용(어려운 단어·숙어 금지). [문법] 단순 현재·과거 시제의 기본 문장만 사용(접속사·관계사·수동태 금지).",
-  "중급": "[길이] 외국어 기준 8~11단어(한중일 14~20자). [어휘] 흔히 쓰는 쉬운 일상 회화 단어만 사용(어려운 한자어나 추상어 금지). [문법] 초급 기본 시제에 쉬운 접속사(because/when/if), 조동사, 비교급, want to 중 딱 1가지만 가볍게 추가.",
-  "고급": "[길이] 외국어 기준 12~16단어(한중일 22~30자). [어휘] 일상·업무에서 자주 쓰는 표현과 기본 동사구 사용. [문법] 초급·중급 문법을 바탕으로 현재완료, 수동태, 관계대명사, to부정사/동명사 중 1~2가지를 자연스럽게 활용.",
-  "최고급": "[길이] 외국어 기준 17~24단어(한중일 30~44자)의 긴 복문. [어휘] 세련된 형용사·부사·추상/관용 표현 적극 사용. [문법] 하위 등급에서 익힌 문법 위에 관계사절, 분사구문, 가정법, 수동태 중 2가지 이상을 결합."
+  "왕초급": "[수준] 초등 3~4학년 영어. [길이] 외국어 3~5단어(한중일 5~9자), 한국어 문장 5~12자의 아주 짧은 문장. [어휘] 색깔·가족·숫자·동물·음식·학교 등 초등 필수 기초 단어만. [문법] be동사(am/is/are)와 단순 현재형의 긍정문·의문문만(I like apples. This is my bag.). 과거형·부정문·접속사·조동사는 금지.",
+  "초급": "[수준] 초등 5~6학년~중학교 1학년. [길이] 외국어 5~8단어(한중일 9~14자), 한국어 문장 12~22자. [어휘] 초등 필수 어휘와 일상 기본 단어(어려운 단어·숙어 금지). [문법] 단순 과거, 일반동사 부정문·의문문, can, 현재진행형, there is/are, 빈도부사 중 1가지. 접속사는 and/but/so만 허용.",
+  "중급": "[수준] 중학교 2~3학년. [길이] 외국어 8~12단어(한중일 15~24자), 한국어 문장 20~35자. [어휘] 중학교 교과서 수준의 일상·학교·여행 어휘, 쉬운 구동사 1개까지. [문법] 미래(will/be going to), must/should/have to, to부정사, 동명사, 비교급·최상급, 접속사(because/when/if/that) 중 1~2가지. 수동태는 쉬운 것 1개까지.",
+  "고급": "[수준] 고등학교 1~2학년(공통영어) 수준. [길이] 외국어 12~18단어(한중일 25~35자), 한국어 문장 30~50자. [어휘] 고교 교과서·수능 기본 어휘, 흔한 구동사·숙어 1~2개. [문법] 현재완료, 수동태, 관계대명사(who/which/that), 분사(현재분사·과거분사), 가정법 과거, 간접의문문 중 1~2가지를 자연스럽게.",
+  "최고급": "[수준] 고등학교 3학년~수능·대학 초입 수준. [길이] 외국어 18~28단어(한중일 35~55자)의 복문, 한국어 문장 45~80자. [어휘] 수능 고난도·시사·학술 어휘, 추상어·관용 표현. [문법] 가정법 과거완료, 분사구문, 관계부사·계속적 용법, 도치·강조구문, 완료수동 중 2가지 이상을 결합."
 };
 function getLowerLearned(lv){
-  const lowerNames = lv === "최고급" ? ["초급", "중급", "고급"] : lv === "고급" ? ["초급", "중급"] : lv === "중급" ? ["초급"] : [];
+  const lowerNames = LV.slice(0, Math.max(0, LV.indexOf(lv)));
   if(!lowerNames.length) return "";
   const lowerIds = new Set(folders.filter(f => lowerNames.includes(f.name)).map(f => f.id));
   const items = load().filter(x => lowerIds.has(x.fid));
@@ -511,14 +525,10 @@ $("lvlSel").onchange = () => {
   const lv = $("lvlSel").value;
   try{ localStorage.setItem(L.ek + ":lvl", lv); }catch(e){}
   if(lv) ensureLevelFolder(lv);
+  renderLv();
 };
 $("genSent").onclick = async () => {
-  let lv = $("lvlSel").value;
-  if(!lv){
-    lv = "중급"; $("lvlSel").value = lv;
-    try{ localStorage.setItem(L.ek + ":lvl", lv); }catch(e){}
-    ensureLevelFolder(lv);
-  }
+  const lv = curLv();
   if(!sample) return;
   $("genSent").disabled = true; $("genSent").textContent = "만드는 중…";
   clearAll();
@@ -563,6 +573,13 @@ function renderPoints(out, points){
 function showExplain(){
   const r = cur.r, out = $("exOut"); out.className = "res"; out.replaceChildren();
   out.appendChild(el("span", r.correct ? "정확해요 👍" : "고칠 부분이 있어요", "tag " + (r.correct ? "ok" : "bad")));
+  if(typeof r.score === "number"){
+    const z = r.score >= 80 ? "" : r.score >= 60 ? " mid" : " bad", sc = el("div", null, "score" + z);
+    const hd = el("div"); hd.appendChild(el("span", "📊 " + r.score + "점", "sn"));
+    if(r.m !== undefined) hd.appendChild(el("span", "뜻 " + r.m + "/40 · 문법 " + r.g + "/40 · 자연스러움 " + r.n + "/20", "sd"));
+    const mt = el("div", null, "meter"), bar = el("i"); bar.style.width = r.score + "%"; mt.appendChild(bar);
+    sc.append(hd, mt); out.appendChild(sc);
+  }
   if(r.better){
     const tip = el("div", null, "fix");
     tip.appendChild(el("div", "💡 이렇게 써도 좋아요!", "gh"));
@@ -597,6 +614,7 @@ function showExplain(){
       out.appendChild(b);
     });
   }
+  if((cur.dir || "ko2en") === "en2ko") addChips(out, r.phrases);
   $("ansIdle").hidden = true;
   if(r.correct && !cur.revealed) cur.revealed = true;
   $("reveal").hidden = cur.revealed;
@@ -617,6 +635,7 @@ function showAnswer(){
   if(!cur.revealed) return;
   a.appendChild(el("div","정답","sec")); a.appendChild(el("div", cur.r.corrected, "fix")); if(cur.r.reading) a.appendChild(el("div", cur.r.reading, "muted"));
   if(cur.r.why && cur.r.why.length){ a.appendChild(el("div","이렇게 고친 이유","sec")); a.appendChild(olist(cur.r.why)); }
+  if((cur.dir || "ko2en") !== "en2ko") addChips(a, cur.r.phrases);
   wrapWords(a);
 }
 function fitBox(el){
@@ -640,6 +659,7 @@ $("check").onclick = async () => {
   const ko = $("ko").value.trim(), en = $("en").value.trim();
   if(!ko || !en){ $("exOut").textContent = fill("한국어 문장과 영어 번역을 모두 입력해 주세요."); return; }
   if(!sample) return;
+  $("lvNote").hidden = true;
   $("check").disabled = true; $("exOut").className="muted"; $("exOut").textContent = "해설을 만들고 있어요…"; $("ansOut").replaceChildren(); $("reveal").hidden = true;
   const extractArr = (src, key) => {
     const m = src.match(new RegExp('"' + key + '"\\s*:\\s*\\['));
@@ -672,16 +692,19 @@ $("check").onclick = async () => {
     const prevNote = prevE ? `\n\n[이전 검사 기록]\n이전에 같은 문장에서 "${prevE.r.better}"라고 제안했고(당시 학습자 문장: ${prevE.en}), 학습자는 이를 참고해 다시 썼을 수 있다. 학습자 문장이 그 제안을 반영했다면 반드시 인정하고, 그 제안을 뒤집는 조언(예: 원래 표현이 더 낫다)을 하지 마라. "better"는 빈 문자열로 둔다.` : "";
     const BETTER = `\n\n["better" 규칙]\n- 학습자 문장이 이미 자연스러우면 "better"는 반드시 빈 문자열이다. 비슷한 단어끼리 바꾸자는 취향 차원의 제안은 하지 마라.\n- 원어민이 실제로 더 흔히 쓰고 차이가 분명할 때만 제안한다. 이때 제안한 표현이 학습자가 다음에 그대로 써도 문제없는 완전한 표현이어야 한다(제안과 판정이 서로 모순되면 안 된다).` + prevNote;
     const RULES = BETTER + `\n\n[points 작성 규칙]\n- 문장 앞에서부터 순서대로 핵심 포인트 2~3개만 쓴다. 같은 내용을 다른 포인트나 "why"에서 반복하지 마라.\n- "part"에는 학습자 문장에서 해당하는 부분을 그대로 인용한다.\n- "hint"(ok가 false일 때만): 영어를 잘 모르는 학습자에게 말하듯 친근하게 1~2문장으로 스스로 답을 떠올리게 이끈다. 정답 단어나 정답 표현을 직접 쓰지 말고, "이럴 땐 어떤 모양을 쓸까요?"처럼 생각할 거리를 던져라.\n- "comment": 문법 설명 1~2문장. 이 문법이 왜 필요한지, 언제 어떻게 쓰는지를 쉬운 말로 설명한다. ok가 true면 잘 쓴 이유를 짧은 칭찬과 함께, false면 정답을 그대로 드러내지 않는 선에서 규칙만 설명한다.\n- 서론, 반복 칭찬, 예문은 쓰지 마라. 짧고 핵심만.`;
+    const EXTRA = `\n\n[점수 규칙]\n- "m"(0~40): 뜻 전달의 정확도. "g"(0~40): 문법·철자(맞춤법)의 정확도. "n"(0~20): 원어민이 쓰는 자연스러움.\n- 군더더기 없이 정확하면 합계 90 이상, 사소한 차이만 있으면 80~89. 뜻이 다르거나 문법 오류가 있으면 해당 항목을 확실히 깎아라.\n- "correct"가 true면 m+g+n이 반드시 80 이상, false면 79 이하여야 한다.\n\n["phrases" 규칙]\n- ${dir === "en2ko" ? "원문 영어 문장" : "모범 문장(corrected)"} 속에서 두 단어 이상이 한 덩어리로 쓰이는 숙어·구동사·합성어·연어(예: look forward to, a lot of, ice cream, take care of)만 골라, 문장에 나온 그대로 "t", 원형을 "b"에 쓴다.\n- 주어+동사 같은 일반 문장 구조는 넣지 마라. 없으면 빈 배열, 최대 4개.`;
     const bodyPrompt = dir === "en2ko"
-      ? `원문 영어 문장: ${ko}\n학습자의 한국어 해석: ${en}\n\n학습자의 해석을 검토해 아래 JSON으로 답하라.\n\n[판정]\n- 뜻이 자연스럽게 통하면 사소한 조사나 어투가 달라도 "correct": true. 명백히 틀리거나 말이 안 될 때만 false.\n- true여도 더 매끄러운 한국어가 있으면 "better"에 한 문장으로 부드럽게 제안(없으면 "").` + RULES + `\n\n{"correct": true 또는 false,\n"better": "더 자연스러운 한국어 표현 제안 1문장(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"원문과 학습자 해석에서 해당하는 부분","ok": true 또는 false,"hint":"ok가 false일 때만 정답을 숨긴 친근한 힌트(true면 빈 문자열)","comment":"문법 설명 1~2문장"}],\n"corrected": "가장 자연스럽고 정확한 한국어 해석(이미 좋으면 학습자 해석 그대로)",\n"why": ["정답 공개 후 보여줄 짧은 이유 1~3개. 학습자 해석과 정답이 달라진 곳만 한 줄씩"]}`
-      : `한국어 문장: ${ko}\n학습자의 영어 번역: ${en}\n\n학습자의 번역을 검토해 아래 JSON으로 답하라.\n\n[판정]\n- 원어민이 들었을 때 어색하지 않고 뜻이 통하면 사소한 어휘·어순 차이가 있어도 "correct": true. 명백한 문법 오류나 뜻이 어긋날 때만 false.\n- true여도 더 자연스러운 일상 표현이 있으면 "better"에 한 문장으로 부드럽게 제안(없으면 "").` + RULES + `\n\n{"correct": true 또는 false,\n"better": "더 자연스러운 원어민 표현 제안 1문장(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"학습자 문장에서 이 문법이 쓰인 실제 부분","ok": true 또는 false,"hint":"ok가 false일 때만 정답을 숨긴 친근한 힌트(true면 빈 문자열)","comment":"문법 설명 1~2문장"}],\n"corrected": "원어민이 일상에서 가장 자연스럽게 말하는 모범 문장",{READING}\n"why": ["정답 공개 후 보여줄 짧은 이유 1~3개. 학습자 문장과 정답이 달라진 곳만 한 줄씩"]}`;
+      ? `원문 영어 문장: ${ko}\n학습자의 한국어 해석: ${en}\n\n학습자의 해석을 검토해 아래 JSON으로 답하라.\n\n[판정]\n- 뜻이 자연스럽게 통하면 사소한 조사나 어투가 달라도 "correct": true. 명백히 틀리거나 말이 안 될 때만 false.\n- true여도 더 매끄러운 한국어가 있으면 "better"에 한 문장으로 부드럽게 제안(없으면 "").` + RULES + EXTRA + `\n\n{"correct": true 또는 false,\n"better": "더 자연스러운 한국어 표현 제안 1문장(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"원문과 학습자 해석에서 해당하는 부분","ok": true 또는 false,"hint":"ok가 false일 때만 정답을 숨긴 친근한 힌트(true면 빈 문자열)","comment":"문법 설명 1~2문장"}],\n"corrected": "가장 자연스럽고 정확한 한국어 해석(이미 좋으면 학습자 해석 그대로)",\n"phrases": [{"t":"원문에 나온 그대로의 숙어·합성어(2단어 이상)","b":"원형"}],\n"why": ["정답 공개 후 보여줄 짧은 이유 1~3개. 학습자 해석과 정답이 달라진 곳만 한 줄씩"],\n"m": 뜻 점수(0~40 정수),\n"g": 문법 점수(0~40 정수),\n"n": 자연스러움 점수(0~20 정수)}`
+      : `한국어 문장: ${ko}\n학습자의 영어 번역: ${en}\n\n학습자의 번역을 검토해 아래 JSON으로 답하라.\n\n[판정]\n- 원어민이 들었을 때 어색하지 않고 뜻이 통하면 사소한 어휘·어순 차이가 있어도 "correct": true. 명백한 문법 오류나 뜻이 어긋날 때만 false.\n- true여도 더 자연스러운 일상 표현이 있으면 "better"에 한 문장으로 부드럽게 제안(없으면 "").` + RULES + EXTRA + `\n\n{"correct": true 또는 false,\n"better": "더 자연스러운 원어민 표현 제안 1문장(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"학습자 문장에서 이 문법이 쓰인 실제 부분","ok": true 또는 false,"hint":"ok가 false일 때만 정답을 숨긴 친근한 힌트(true면 빈 문자열)","comment":"문법 설명 1~2문장"}],\n"corrected": "원어민이 일상에서 가장 자연스럽게 말하는 모범 문장",{READING}\n"phrases": [{"t":"모범 문장에 나온 그대로의 숙어·합성어(2단어 이상)","b":"원형"}],\n"why": ["정답 공개 후 보여줄 짧은 이유 1~3개. 학습자 문장과 정답이 달라진 곳만 한 줄씩"],\n"m": 뜻 점수(0~40 정수),\n"g": 문법 점수(0~40 정수),\n"n": 자연스러움 점수(0~20 정수)}`;
     const prompt = fill(SYS + "\n\n" + bodyPrompt);
     const r = await sample.json(prompt, onStream, msg => { $("exOut").className = "muted"; $("exOut").textContent = msg; });
+    finalizeResult(r);
     const prev = load();
     const ex = prev.find(x => x.ko === ko && (x.fid || "base") === curSel && (x.dir || "ko2en") === dir) || prev.find(x => x.id === openedId && x.ko === ko);
-    cur = {id: ex ? ex.id : Date.now()+"", t: Date.now(), ko, en, r, dir, revealed:false, solved:!!r.correct, fid:curSel};
+    cur = {id: ex ? ex.id : Date.now()+"", t: Date.now(), ko, en, r, dir, revealed:false, solved:!!r.correct, fid:curSel, lv:curLv(), score:r.score, counted:true};
     $("retry").value = ""; $("reOut").textContent = "";
     showExplain(); saveCur();
+    if(typeof r.score === "number" && !(ex && ex.counted)) recordResult(r.score);
   }catch(e){
     const m = e && e.message;
     $("exOut").className = "muted";
@@ -692,7 +715,7 @@ $("check").onclick = async () => {
   }finally{ $("check").disabled = false; }
 };
 
-$("reveal").onclick = () => { if(!cur) return; cur.revealed = true; $("reveal").hidden = true; showAnswer(); saveCur(); };
+$("reveal").onclick = () => { if(!cur) return; cur.revealed = true; $("reveal").hidden = true; showAnswer(); saveCur(); rewrapAll(); };
 const clearAll = () => { cur = null; openedId = null; renderQA(); $("ansIdle").hidden = false; $("listenIdle").hidden = false; $("listenGenRow").hidden = true; $("speakRow").hidden = true; $("speakMsg").textContent = ""; if(window.speechSynthesis) speechSynthesis.cancel(); $("ko").value=""; $("en").value=""; $("retry").value=""; $("reOut").textContent=""; $("retrySrc").hidden=true; $("retrySrcText").textContent=""; fitAllBoxes(); $("ansOut").replaceChildren(); $("reveal").hidden=true; $("recheck").disabled=true; $("exOut").className="muted"; $("exOut").textContent="검사하기를 누르면 여기에 해설이 나와요."; };
 
 /* ---- 질문란 ---- */
@@ -716,7 +739,7 @@ $("askBtn").onclick = async () => {
   try{
     const r = await sample.json(fill(ctx + convo));
     cur.qa.push({role:"assistant", content:r.answer});
-    if(r.gaveAnswer && !cur.revealed){ cur.revealed = true; $("reveal").hidden = true; showAnswer(); }
+    if(r.gaveAnswer && !cur.revealed){ cur.revealed = true; $("reveal").hidden = true; showAnswer(); rewrapAll(); }
     saveCur();
   }catch(e){
     cur.qa.pop(); $("qa").value = q; renderQA();
@@ -745,6 +768,88 @@ $("recheck").onclick = async () => {
   }finally{ $("recheck").disabled = false; }
 };
 
+/* ---- 레벨 시스템 ---- */
+const LV = ["왕초급","초급","중급","고급","최고급"];
+let prog = {my:"초급", run:{lv:"", good:0, bad:0}, recent:[]};
+const curLv = () => $("lvlSel").value || prog.my;
+function loadProg(){
+  let p = null; try{ p = JSON.parse(localStorage.getItem(L.ek + ":prog")); }catch(e){}
+  if(!p || !LV.includes(p.my)){
+    let sv = ""; try{ sv = localStorage.getItem(L.ek + ":lvl") || ""; }catch(e){}
+    p = {my: LV.includes(sv) ? sv : "초급", run:{lv:"", good:0, bad:0}, recent:[]};
+  }
+  p.run = p.run || {lv:"", good:0, bad:0}; p.recent = p.recent || []; prog = p;
+}
+function saveProg(){ try{ localStorage.setItem(L.ek + ":prog", JSON.stringify(prog)); }catch(e){} }
+function renderLv(){
+  const b = $("lvBar"); b.replaceChildren();
+  const lv = curLv(), r = prog.run.lv === lv ? prog.run : {good:0, bad:0};
+  b.appendChild(el("span", "🏅 Lv." + (LV.indexOf(prog.my) + 1) + " " + prog.my, "lvpill"));
+  const bits = [];
+  if(lv !== prog.my) bits.push("연습 단계: " + lv);
+  bits.push(r.bad > 0 ? "💧 연속 어려움 " + r.bad + "/3" : "🔥 연속 정답 " + r.good + "/3");
+  if(prog.recent.length) bits.push("최근 평균 " + Math.round(prog.recent.reduce((a, c) => a + c, 0) / prog.recent.length) + "점");
+  b.appendChild(el("span", bits.join(" · ")));
+}
+function recordResult(score){
+  const lv = curLv();
+  if(prog.run.lv !== lv) prog.run = {lv, good:0, bad:0};
+  if(score >= 80){ prog.run.good++; prog.run.bad = 0; }
+  else if(score < 60){ prog.run.bad++; prog.run.good = 0; }
+  else { prog.run.good = 0; prog.run.bad = 0; }
+  prog.recent.unshift(score); prog.recent = prog.recent.slice(0, 10);
+  const kind = prog.run.good >= 3 ? "up" : prog.run.bad >= 3 ? "down" : null;
+  saveProg(); renderLv(); showLvNote(kind, lv);
+}
+function dismissNote(k){ prog.run[k] = 0; saveProg(); renderLv(); $("lvNote").hidden = true; }
+function applyLevel(l){
+  prog.my = l; prog.run = {lv:l, good:0, bad:0}; saveProg();
+  if($("lvlSel").value){ $("lvlSel").value = l; try{ localStorage.setItem(L.ek + ":lvl", l); }catch(e){} ensureLevelFolder(l); }
+  renderLv();
+  const n = $("lvNote"); n.replaceChildren(el("div", "✓ 레벨을 " + l + "으로 바꿨어요. 이제 새 문장도 이 단계로 나와요.")); n.hidden = false;
+}
+function showLvNote(kind, lv){
+  const n = $("lvNote"); n.replaceChildren();
+  const i = LV.indexOf(lv);
+  const btn = (t, fn, ghost) => { const b = el("button", t, "sm" + (ghost ? " ghost" : "")); b.onclick = fn; return b; };
+  if(kind === "up"){
+    if(i >= LV.length - 1){ prog.run.good = 0; saveProg(); renderLv(); n.appendChild(el("div", "🏆 최고급에서 3문장 연속 정답! 가장 높은 단계예요.")); }
+    else {
+      const nx = LV[i + 1];
+      n.appendChild(el("div", "🎉 " + lv + " 단계에서 3문장 연속 정답이에요! " + nx + "으로 올려 볼까요?"));
+      n.append(btn(nx + "으로 올리기", () => applyLevel(nx)), btn("나중에", () => dismissNote("good"), true));
+    }
+  } else if(kind === "down"){
+    if(i <= 0){ prog.run.bad = 0; saveProg(); renderLv(); n.hidden = true; return; }
+    const pv = LV[i - 1];
+    n.appendChild(el("div", "💪 최근 3문장이 연속으로 어려웠어요. " + pv + "으로 한 단계 낮춰서 다져 볼까요?"));
+    n.append(btn(pv + "으로 낮추기", () => applyLevel(pv)), btn("계속 도전", () => dismissNote("bad"), true));
+  } else { n.hidden = true; return; }
+  n.hidden = false;
+}
+function finalizeResult(r){
+  const c = (v, mx) => Math.max(0, Math.min(mx, Math.round(Number(v))));
+  const has = ["m", "g", "n"].every(k => r[k] !== undefined && r[k] !== null && r[k] !== "" && !isNaN(Number(r[k])));
+  if(has){ r.m = c(r.m, 40); r.g = c(r.g, 40); r.n = c(r.n, 20); r.score = r.m + r.g + r.n; r.correct = r.score >= 80; }
+  else if(r.score !== undefined && r.score !== null && !isNaN(Number(r.score))){ r.score = c(r.score, 100); r.correct = r.score >= 80; }
+  else delete r.score;
+  r.phrases = normPhr(r.phrases);
+}
+function normPhr(a){
+  const out = [];
+  (Array.isArray(a) ? a : []).forEach(p => {
+    const t = String(typeof p === "string" ? p : (p && p.t) || "").trim();
+    if(!t || !/\s/.test(t) || t.length > 40 || out.some(o => o.t.toLowerCase() === t.toLowerCase())) return;
+    out.push({t, b: String((p && p.b) || t).trim()});
+  });
+  return out.slice(0, 5);
+}
+function addChips(box, phr){
+  if(!phr || !phr.length) return;
+  box.appendChild(el("div", "📌 숙어·표현 (눌러서 단어장에 담기)", "sec"));
+  const row = el("div"); phr.forEach(p => row.appendChild(el("span", p.t, "w ph chip"))); box.appendChild(row);
+}
+
 /* ---- 단어장 ---- */
 let LC = "en", VK = "es:vocab", sheetCtx = "", selT = null;
 const vOpen = new Set();
@@ -755,20 +860,42 @@ const WRE = {
 const PICK = "#exOut,#ansOut,#qaLog,#dictOut,#retrySrc,#reOut,#vlist";
 const loadV = () => { try{ return JSON.parse(localStorage.getItem(VK)) || []; }catch(e){ return []; } };
 const saveV = a => { try{ localStorage.setItem(VK, JSON.stringify(a)); }catch(e){} };
+const escRe = t => t.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\s+/g, "\\s+");
+function vocabPhrases(){
+  const out = [];
+  loadV().forEach(x => (x.ex || []).forEach(e => (e.ph || []).forEach(t => { if(!out.includes(t)) out.push(t); })));
+  return out;
+}
+function phrasesFor(root){
+  if(root.id === "vlist" || (root.closest && root.closest("#vlist"))) return vocabPhrases();
+  if(!cur || !cur.r || !cur.r.phrases || !cur.r.phrases.length) return [];
+  if((cur.dir || "ko2en") !== "en2ko" && !cur.revealed) return [];
+  return cur.r.phrases.map(p => p.t);
+}
+function unwrap(root){
+  if(!root) return;
+  root.querySelectorAll(".w:not(.chip)").forEach(sp => sp.replaceWith(document.createTextNode(sp.textContent)));
+  root.normalize();
+}
+function rewrapAll(){
+  ["exOut", "qaLog", "retrySrcText"].forEach(id => { const r = $(id); unwrap(r); wrapWords(r); });
+}
 function wrapWords(root){
   const src = WRE[LC]; if(!root || !src) return;
+  const phr = phrasesFor(root).sort((x, y) => y.length - x.length).map(escRe);
+  const pat = (phr.length ? "\\b(?:" + phr.join("|") + ")\\b|" : "") + src;
   const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT), nodes = [];
   while(walker.nextNode()) nodes.push(walker.currentNode);
   nodes.forEach(n => {
     const par = n.parentNode;
     if(!par || (par.closest && par.closest(".w,button,summary,textarea,input,select"))) return;
-    const t = n.nodeValue, re = new RegExp(src, "g");
+    const t = n.nodeValue, re = new RegExp(pat, "gi");
     if(!re.test(t)) return;
     re.lastIndex = 0;
     const f = document.createDocumentFragment(); let last = 0, m;
     while((m = re.exec(t))){
       if(m.index > last) f.appendChild(document.createTextNode(t.slice(last, m.index)));
-      f.appendChild(el("span", m[0], "w")); last = m.index + m[0].length;
+      f.appendChild(el("span", m[0], /\s/.test(m[0]) ? "w ph" : "w")); last = m.index + m[0].length;
     }
     if(last < t.length) f.appendChild(document.createTextNode(t.slice(last)));
     par.replaceChild(f, n);
@@ -809,9 +936,9 @@ function vocabPrompt(w, ctx, have, n){
   return `영어 단어/표현 "${w}"를 단어장 항목으로 정리하라.` +
     (ctx ? `\n참고 문장(이 단어가 쓰인 문장. 뜻을 고를 때만 참고하고 예문으로 그대로 베끼지 마라): ${ctx}` : "") +
     (have ? `\n이미 있는 예문(겹치지 않는 새 예문을 쓸 것): ${have}` : "") +
-    `\n규칙:\n- 활용형이면 원형을 "word"에 쓴다. 입력이 한국어면 가장 자연스러운 영어 표현 하나를 "word"로 쓴다.\n- "meaning"은 쉬운 한국어로 간결하게(참고 문장이 있으면 그 문맥의 뜻을 먼저).\n- "ex"는 원어민이 일상에서 실제로 쓰는 자연스럽고 쉬운 예문 ${n}개. 모두 이 단어를 포함하고 서로 다른 상황·쓰임이어야 한다.\n- 예문의 한국어 해석("ko")은 직역투가 아닌 자연스러운 말로.\nJSON만 출력:\n{"word":"표제어","pron":"{PRON}","pos":"품사(한국어)","meaning":"한국어 뜻","ex":[{"fl":"영어 예문","ko":"한국어 해석"}]}`;
+    `\n규칙:\n- 활용형이면 원형을 "word"에 쓴다. 입력이 한국어면 가장 자연스러운 영어 표현 하나를 "word"로 쓴다. 숙어·합성어(두 단어 이상)면 그대로 표제어로 쓴다.\n- "meaning"은 쉬운 한국어로 간결하게(참고 문장이 있으면 그 문맥의 뜻을 먼저).\n- "ex"는 원어민이 일상에서 실제로 쓰는 자연스럽고 쉬운 예문 ${n}개. 모두 이 단어를 포함하고 서로 다른 상황·쓰임이어야 한다.\n- 예문의 한국어 해석("ko")은 직역투가 아닌 자연스러운 말로.\nJSON만 출력:\n{"word":"표제어","pron":"{PRON}","pos":"품사(한국어)","meaning":"한국어 뜻","ex":[{"fl":"영어 예문","ko":"한국어 해석","ph":["예문 속 두 단어 이상 숙어·합성어(없으면 빈 배열)"]}]}`;
 }
-const cleanEx = arr => (arr || []).filter(e => e && e.fl).map(e => ({fl:String(e.fl), ko:String(e.ko || "")}));
+const cleanEx = arr => (arr || []).filter(e => e && e.fl).map(e => ({fl:String(e.fl), ko:String(e.ko || ""), ph:(Array.isArray(e.ph) ? e.ph : []).map(x => String(x).trim()).filter(x => /\s/.test(x) && x.length <= 40).slice(0, 3)}));
 async function addWord(raw, ctx){
   const w = raw.trim().replace(/^[^\p{L}\p{N}]+|[^\p{L}\p{N}]+$/gu, "");
   if(!w) return {status:"empty"};
@@ -1000,6 +1127,7 @@ function setLang(code){
   let savedLv = ""; try{ savedLv = localStorage.getItem(L.ek + ":lvl") || ""; }catch(e){}
   $("lvlSel").value = LVL_GUIDE[savedLv] ? savedLv : "";
   if($("lvlSel").value) ensureLevelFolder($("lvlSel").value);
+  loadProg(); renderLv(); $("lvNote").hidden = true;
   closeSheet(); $("vfind").value = ""; $("vmsg").replaceChildren(); vOpen.clear(); renderVocab();
   dedupe(); renderHist();
 }
