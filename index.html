@@ -223,7 +223,7 @@ button.lang{margin:0;font-weight:400;background:var(--card);color:var(--ink);bor
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 4.0</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 4.1</span><span>Made by 성원 아름</span></div>
 </main>
 
 <script>
@@ -450,8 +450,8 @@ function getLowerLearned(lv){
   const items = load().filter(x => lowerIds.has(x.fid));
   const grams = [];
   items.slice(0, 8).forEach(x => {
-    (x.r && x.r.grammar || []).forEach(g => {
-      const n = typeof g === "string" ? g : g.name;
+    (x.r && (x.r.points || x.r.grammar) || []).forEach(g => {
+      const n = typeof g === "string" ? g : (g.title || g.name);
       if(n && !grams.includes(n)) grams.push(n);
     });
   });
@@ -512,33 +512,59 @@ $("genSent").onclick = async () => {
 };
 
 /* ---- 해설 표시 ---- */
+function renderPoints(out, points){
+  out.appendChild(el("div","핵심 문법 & 문장 분석","sec"));
+  points.forEach((pt, i) => {
+    const b = el("div", null, "gbox");
+    const hd = el("div", null, "dh");
+    hd.appendChild(el("span", (i+1) + ". " + (pt.title || ""), "gname"));
+    hd.appendChild(el("span", pt.ok ? "✓ 잘 적용했어요" : "✎ 고치면 좋아요", "tag " + (pt.ok ? "ok" : "bad")));
+    b.appendChild(hd);
+    if(pt.part) b.appendChild(el("div", "📌 해당 부분: " + pt.part, "gh"));
+    if(pt.comment) b.appendChild(el("div", pt.comment));
+    if(!pt.ok && pt.hint) b.appendChild(el("div", "💡 " + pt.hint));
+    if(!pt.ok && pt.question) b.appendChild(el("div", "👉 " + pt.question, "muted"));
+    if(pt.example){ b.appendChild(el("div","📝 예문","gh")); b.appendChild(el("div", pt.example.en)); b.appendChild(el("div", pt.example.ko, "muted")); }
+    out.appendChild(b);
+  });
+}
 function showExplain(){
   const r = cur.r, out = $("exOut"); out.className = "res"; out.replaceChildren();
   out.appendChild(el("span", r.correct ? "정확해요 👍" : "고칠 부분이 있어요", "tag " + (r.correct ? "ok" : "bad")));
-  out.appendChild(el("div","① 같이 하나씩 살펴볼까요?","sec"));
-  if(r.steps && r.steps.length){
-    r.steps.forEach((st,i) => {
+  if(r.better){
+    const tip = el("div", null, "fix");
+    tip.appendChild(el("div", "✨ 더 자연스러운 표현", "gh"));
+    tip.appendChild(el("div", r.better));
+    out.appendChild(tip);
+  }
+  if(r.points && r.points.length){
+    renderPoints(out, r.points);
+  } else {
+    out.appendChild(el("div","① 같이 하나씩 살펴볼까요?","sec"));
+    if(r.steps && r.steps.length){
+      r.steps.forEach((st,i) => {
+        const b = el("div",null,"gbox");
+        b.appendChild(el("div",(i+1)+". "+st.part,"gname"));
+        if(st.check) b.appendChild(el("div",st.check));
+        if(st.hint) b.appendChild(el("div","💡 "+st.hint));
+        if(st.question) b.appendChild(el("div","👉 "+st.question,"muted"));
+        out.appendChild(b);
+      });
+    } else {
+      const hints = [].concat(r.diagnosis||[], r.questions||[]);
+      out.appendChild(hints.length ? list(hints) : el("div","고칠 부분 없이 잘 썼어요! 아래 핵심 문법을 확인해 보세요."));
+    }
+    out.appendChild(el("div","② 문법 배우기","sec"));
+    (r.grammar||[]).forEach((g,i) => {
+      if(typeof g === "string"){ out.appendChild(list([g])); return; }
       const b = el("div",null,"gbox");
-      b.appendChild(el("div",(i+1)+". "+st.part,"gname"));
-      if(st.check) b.appendChild(el("div",st.check));
-      if(st.hint) b.appendChild(el("div","💡 "+st.hint));
-      if(st.question) b.appendChild(el("div","👉 "+st.question,"muted"));
+      b.appendChild(el("div", (i+1)+". "+g.name, "gname"));
+      if(g.summary) b.appendChild(el("div", g.summary));
+      [["💡 왜 만들어졌을까요?", g.why],["⏰ 언제 쓰나요?", g.when],["🔧 어떻게 쓰나요?", g.how]].forEach(([h,t]) => { if(t){ b.appendChild(el("div",h,"gh")); b.appendChild(el("div",t)); } });
+      if(g.example){ b.appendChild(el("div","📝 예문","gh")); b.appendChild(el("div", g.example.en)); b.appendChild(el("div", g.example.ko, "muted")); }
       out.appendChild(b);
     });
-  } else {
-    const hints = [].concat(r.diagnosis||[], r.questions||[]);
-    out.appendChild(hints.length ? list(hints) : el("div","고칠 부분 없이 잘 썼어요! 아래 핵심 문법을 확인해 보세요."));
   }
-  out.appendChild(el("div","② 문법 배우기","sec"));
-  (r.grammar||[]).forEach((g,i) => {
-    if(typeof g === "string"){ out.appendChild(list([g])); return; }
-    const b = el("div",null,"gbox");
-    b.appendChild(el("div", (i+1)+". "+g.name, "gname"));
-    if(g.summary) b.appendChild(el("div", g.summary));
-    [["💡 왜 만들어졌을까요?", g.why],["⏰ 언제 쓰나요?", g.when],["🔧 어떻게 쓰나요?", g.how]].forEach(([h,t]) => { if(t){ b.appendChild(el("div",h,"gh")); b.appendChild(el("div",t)); } });
-    if(g.example){ b.appendChild(el("div","📝 예문","gh")); b.appendChild(el("div", g.example.en)); b.appendChild(el("div", g.example.ko, "muted")); }
-    out.appendChild(b);
-  });
   $("ansIdle").hidden = true;
   if(r.correct && !cur.revealed) cur.revealed = true;
   $("reveal").hidden = cur.revealed;
@@ -600,38 +626,17 @@ $("check").onclick = async () => {
   const onStream = txt => {
     const out = $("exOut");
     const cm = txt.match(/"correct"\s*:\s*(true|false)/);
-    const steps = extractArr(txt, "steps"), grams = extractArr(txt, "grammar");
-    if(!cm && !steps.length && !grams.length) return;
+    const pts = extractArr(txt, "points");
+    if(!cm && !pts.length) return;
     out.className = "res"; out.replaceChildren();
     if(cm){ const ok = cm[1] === "true"; out.appendChild(el("span", ok ? "정확해요 👍" : "고칠 부분이 있어요", "tag " + (ok ? "ok" : "bad"))); }
-    if(steps.length){
-      out.appendChild(el("div","① 같이 하나씩 살펴볼까요?","sec"));
-      steps.forEach((st,i) => {
-        const b = el("div",null,"gbox");
-        b.appendChild(el("div",(i+1)+". "+(st.part||""),"gname"));
-        if(st.check) b.appendChild(el("div",st.check));
-        if(st.hint) b.appendChild(el("div","💡 "+st.hint));
-        if(st.question) b.appendChild(el("div","👉 "+st.question,"muted"));
-        out.appendChild(b);
-      });
-    }
-    if(grams.length){
-      out.appendChild(el("div","② 문법 배우기","sec"));
-      grams.forEach((g,i) => {
-        const b = el("div",null,"gbox");
-        b.appendChild(el("div",(i+1)+". "+(g.name||""),"gname"));
-        if(g.summary) b.appendChild(el("div",g.summary));
-        [["💡 왜 만들어졌을까요?", g.why],["⏰ 언제 쓰나요?", g.when],["🔧 어떻게 쓰나요?", g.how]].forEach(([h,t]) => { if(t){ b.appendChild(el("div",h,"gh")); b.appendChild(el("div",t)); } });
-        if(g.example){ b.appendChild(el("div","📝 예문","gh")); b.appendChild(el("div",g.example.en)); b.appendChild(el("div",g.example.ko,"muted")); }
-        out.appendChild(b);
-      });
-    }
+    if(pts.length) renderPoints(out, pts);
     out.appendChild(el("div","작성 중…","muted"));
   };
   try{
     const bodyPrompt = dir === "en2ko"
-      ? `영어 문장: ${ko}\n학습자의 한국어 해석: ${en}\n\n학습자의 한국어 해석을 검토해 아래 JSON으로 답하라.\n중요 규칙: 1) 원문 앞에서부터 순서대로 틀렸거나 어색하게 해석한 부분만 골라 steps에 적는다(맞은 부분은 절대 넣지 말고, 다 맞았으면 []). 2) 각 step에서는 왜 잘못 해석했는지 이유를 차근차근 설명하되, 완성된 정답 해석은 "steps"와 "grammar"에 쓰지 마라(정답은 "corrected"와 "why"에만 쓴다).\n{"correct": 의미와 뉘앙스가 자연스럽고 정확하면 true,\n"steps": [{"part":"문장 앞에서부터 순서대로, 고칠 필요가 있는 원문 영어 표현","check":"왜 빠졌거나 어색한지 원인과 이유를 다정한 해요체 1~2문장으로 차근차근 설명(정답 해석 금지)","hint":"단어 뜻이나 구조를 짚어주는 힌트 1문장(정답 해석 금지)","question":"스스로 뜻을 떠올리게 하는 유도 질문 1개"}],\n"grammar": [{"name":"문법 이름(쉬운 말로)","why":"이 문법이 왜 쓰이는지 1문장","when":"언제 쓰는지 1문장","how":"해석/활용 핵심 규칙 1~2문장","example":{"en":"쉽고 짧은 예문","ko":"한국어 번역"}}] (원문의 핵심 문법 2개 내외),\n"corrected": "자연스럽고 정확한 한국어 해석(이미 좋으면 학습자 해석 그대로)",\n"why": ["고친 이유를 원문 앞에서부터 순서대로 한국어로 설명"]}`
-      : `한국어 문장: ${ko}\n학습자의 영어 번역: ${en}\n\n학습자의 번역을 검토해 아래 JSON으로 답하라.\n중요 규칙: 1) 문장 앞에서부터 순서대로(주어→동사→목적어→수식어 순) 틀렸거나 원어민 일상 표현과 어색한 부분만 골라 steps에 적는다. 맞은 부분은 절대 넣지 마라(완벽하면 []). 2) 각 step의 check에서는 왜 틀렸거나 어색한지 이유를 차근차근 설명하되, 정답 단어나 고친 문장은 "steps"와 "grammar"에 절대 직접 쓰지 마라(정답은 "corrected"와 "why"에만 쓴다).\n{"correct": 문법과 일상 표현이 모두 원어민처럼 자연스러우면 true,\n"steps": [{"part":"문장 앞에서부터 순서대로, 틀렸거나 어색한 부분만 그대로 인용","check":"왜 틀렸는지 또는 원어민 일상 표현과 왜 다른지 이유를 다정한 해요체 1~2문장으로 차근차근 설명(정답 직접 노출 금지)","hint":"스스로 고칠 수 있도록 원어민 감각·전치사·어순 방향을 힌트 1문장으로 안내(정답 직접 노출 금지)","question":"스스로 자연스러운 표현을 떠올리게 하는 유도 질문 1개"}],\n"grammar": [{"name":"문법/표현 포인트(쉬운 말로)","why":"왜 이런 표현을 쓰는지 1문장","when":"일상에서 언제 쓰는지 1문장","how":"핵심 규칙이나 자연스러운 쓰임 1~2문장","example":{"en":"이 문장과 다른 주제의 쉽고 자연스러운 예문","ko":"한국어 번역"}}] (핵심 문법·표현 2개 내외),\n"corrected": "원어민이 일상생활에서 가장 자연스럽게 말하는 문장(직역투 금지)",{READING}\n"why": ["문장 앞에서부터 순서대로, 일상에서 왜 이렇게 말하는지 이유를 한국어로 설명"]}`;
+      ? `원문 영어 문장: ${ko}\n학습자의 한국어 해석: ${en}\n\n학습자의 해석을 공정하고 일관되게 검토해 아래 JSON으로 답하라.\n중요 규칙:\n1) 학습자의 해석이 원문의 핵심 의미와 문맥을 정확히 전달하면 표현이 조금 달라도 반드시 "correct": true로 판정하라(정답이라고 무방한 문장을 억지로 틀렸다고 하지 마라).\n2) 정답이라도 원어민의 뉘앙스를 더 잘 살린 자연스러운 한국어 표현이 있다면 "better"에 제안해 주고, 없으면 빈 문자열 ""로 두어라.\n3) "points"에는 원문 앞에서부터 순서대로 핵심 문법·표현 포인트 2~3개를 넣되, 학습자 문장의 해당 부분("part")과 연결해서 설명하라. 맞았으면 "ok": true로 두고 "이 부분은 이런 문법을 잘 적용해서 해석했어요"처럼 칭찬·설명하고, 틀렸으면 "ok": false로 두고 "이 부분은 이때 이런 문법을 써서 해석하는 게 좋아요"처럼 이유와 힌트를 주되 정답 해석을 그대로 쓰지 마라.\n{"correct": true 또는 false,\n"better": "더 자연스러운 한국어 표현이 있으면 1문장 제안(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"원문 및 학습자 해석에서 해당하는 부분","ok": true 또는 false,"comment":"ok가 true면 잘 적용한 이유를, false면 왜 틀렸고 어떤 문법을 써야 하는지 차근차근 1~2문장 설명(false일 때 정답 직접 노출 금지)","hint":"ok가 false일 때만 힌트 1문장(true면 빈 문자열)","question":"ok가 false일 때만 유도 질문 1개(true면 빈 문자열)","example":{"en":"이 문장과 다른 주제의 쉬운 예문","ko":"한국어 번역"}}],\n"corrected": "가장 자연스럽고 정확한 한국어 해석(이미 좋으면 학습자 해석 그대로)",\n"why": ["해석 포인트와 이유를 한국어로 설명"]}`
+      : `한국어 문장: ${ko}\n학습자의 영어 번역: ${en}\n\n학습자의 번역을 공정하고 일관되게 검토해 아래 JSON으로 답하라.\n중요 규칙:\n1) 학습자의 문장이 문법적으로 옳고 한국어 뜻이 자연스럽게 통하면(정답이라고 무방한 수준이면) AI의 선호 표현과 조금 달라도 반드시 "correct": true로 판정하라. 올바른 답을 억지로 틀렸다고 하지 마라.\n2) "correct": true이더라도 원어민이 일상생활에서 더 자주 쓰는 세련되거나 자연스러운 표현이 있다면 "better"에 제안해 주어라(완벽하면 빈 문자열 "").\n3) "points"에는 이 문장의 핵심 문법·표현 포인트 2~3개를 문장 앞에서부터 순서대로 넣되, 반드시 학습자 문장의 해당 부분("part")과 같이 묶어서 설명하라. 해당 핵심 문법을 맞게 썼으면 "ok": true로 두고 "○○ 부분은 이 문법을 잘 적용했어요"처럼 칭찬과 원리를 설명하고, 틀렸거나 어색하면 "ok": false로 두고 "○○ 부분은 이때 이런 문법을 쓰는 게 좋아요"처럼 왜 틀렸는지 차근차근 설명하라(false일 때 정답 단어를 직접 노출하지 말고 힌트와 질문으로 유도).\n{"correct": true 또는 false,\n"better": "더 자연스러운 원어민 일상 표현 제안(없으면 빈 문자열)",\n"points": [{"title":"핵심 문법/표현 이름(쉬운 말로)","part":"학습자 문장에서 이 문법이 쓰인 실제 부분 인용","ok": true 또는 false,"comment":"ok가 true면 이 문법을 잘 적용했다는 칭찬+핵심 원리 1~2문장, false면 왜 틀렸고 어떤 문법/표현을 써야 하는지 1~2문장 설명(정답 직접 노출 금지)","hint":"ok가 false일 때만 스스로 고칠 수 있는 힌트 1문장(true면 빈 문자열)","question":"ok가 false일 때만 유도 질문 1개(true면 빈 문자열)","example":{"en":"이 문장과 다른 주제의 쉽고 자연스러운 예문","ko":"한국어 번역"}}],\n"corrected": "원어민이 일상생활에서 가장 자연스럽게 말하는 모범 문장",{READING}\n"why": ["문장 앞에서부터 순서대로, 핵심 수정 이유 또는 자연스러운 표현 포인트 설명"]}`;
     const prompt = fill(SYS + "\n\n" + bodyPrompt);
     const r = await sample.json(prompt, onStream, msg => { $("exOut").className = "muted"; $("exOut").textContent = msg; });
     const prev = load();
