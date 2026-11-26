@@ -389,14 +389,15 @@ async function callGroq(prompt, onStream, onStatus, opts){
       stream: !!onStream
     }, extra, (opts && typeof opts.temperature === "number") ? {temperature: opts.temperature} : {}))
   });
-  const cfgs = [{reasoning_effort:"medium"}, {}];
+  const cfgs = [{reasoning_effort:(opts && opts.effort) || "medium"}, {}];
   const tryModels = [model, ...ALL_MODELS.filter(m => m !== model)];
   let res = null, lastErr = null;
   for(let mi = 0; mi < tryModels.length; mi++){
     const m = tryModels[mi];
+    if(opts && opts.quick && mi > 1) break;
     if(onStatus) onStatus(mi === 0 ? `해설을 만들고 있어요… (${m})` : `응답 지연/오류로 다음 모델 시도 중… (${m})`);
     const ac = new AbortController();
-    const timer = setTimeout(() => ac.abort(), 25000);
+    const timer = setTimeout(() => ac.abort(), (opts && opts.timeout) || 25000);
     try{
       res = null;
       for(let k = 0; k < cfgs.length; k++){
@@ -631,11 +632,47 @@ function hasName(en){
   const w = String(en || "").replace(/[^A-Za-z'\s]/g, " ").split(/\s+/).filter(Boolean).slice(1);
   return w.some(x => /^[A-Z]/.test(x) && !NAME_OK.test(x));
 }
+/* 레벨별 기본 문장 (AI가 실패할 때 바로 쓰고, AI에게 본보기로도 보여줌) */
+const BANK = [
+ [["이것은 우리 학교입니다.","This is my school."],["우리 어머니는 친절하십니다.","My mother is kind."],["하늘은 파랗습니다.","The sky is blue."],["나는 학생입니다.","I am a student."],["우리는 좋은 친구입니다.","We are good friends."]],
+ [["나는 빨간 가방이 있습니다.","I have a red bag."],["나는 사과를 좋아합니다.","I like apples."],["저것은 그녀의 자전거입니다.","That is her bike."],["우리는 고양이 두 마리가 있습니다.","We have two cats."],["여기가 당신의 자리입니다.","This is your seat."]],
+ [["그녀는 매일 아침 우유를 마십니다.","She drinks milk every morning."],["우리 아버지는 주말마다 요리를 하십니다.","My father cooks on weekends."],["당신은 걸어서 학교에 갑니까?","Do you walk to school?"],["그 가게는 아홉 시에 문을 엽니다.","The store opens at nine."],["당신의 여동생은 음악을 좋아합니까?","Does your sister like music?"]],
+ [["우리 할머니는 커피를 드시지 않습니다.","My grandmother doesn't drink coffee."],["고양이가 탁자 아래에 있습니다.","The cat is under the table."],["우리는 일요일에 수업이 없습니다.","We don't have class on Sunday."],["열쇠는 책상 위에 있습니다.","The keys are on the desk."],["그는 집에서 아침을 먹지 않습니다.","He doesn't eat breakfast at home."]],
+ [["내 남동생은 수영을 잘할 수 있습니다.","My little brother can swim well."],["아이들이 공원에서 놀고 있습니다.","The children are playing in the park."],["당신은 채소를 어디에서 삽니까?","Where do you buy your vegetables?"],["어머니는 지금 신문을 읽고 계십니다.","My mother is reading a newspaper now."],["저녁으로 무엇을 먹고 싶습니까?","What do you want for dinner?"]],
+ [["우리 학교 주변에는 나무가 많이 있습니다.","There are many trees around our school."],["우리 아버지는 항상 걸어서 출근하십니다.","My father always walks to work."],["우리 집 근처에 작은 빵집이 하나 있습니다.","There is a small bakery near my house."],["점심 식사 후에 함께 교실을 청소합시다.","Let's clean the classroom together after lunch."],["우리는 가끔 식당에서 저녁을 먹습니다.","We sometimes eat dinner at a restaurant."]],
+ [["지난 주말에는 날씨가 매우 추웠습니다.","The weather was very cold last weekend."],["내 여동생은 오늘 아침에 자기 방을 청소했습니다.","My sister cleaned her room this morning."],["어제 오후에 도서관은 왜 문을 닫았습니까?","Why was the library closed yesterday afternoon?"],["우리는 연휴 동안 조부모님을 방문했습니다.","We visited our grandparents during the holiday."],["당신은 언제 이 동네로 이사 왔습니까?","When did you move to this town?"]],
+ [["우산을 깜빡해서 나는 비에 젖었습니다.","I forgot my umbrella, so I got wet."],["눈이 많이 왔지만 버스는 제시간에 다녔습니다.","It snowed a lot, but the buses ran on time."],["그녀는 오늘 학교에서 점심을 먹지 않았습니다.","She didn't eat lunch at school today."],["우리 삼촌은 지난달에 새 차를 샀습니다.","My uncle bought a new car last month."],["우리는 지하철을 타서 일찍 도착했습니다.","We took the subway and arrived early."]],
+ [["나는 이번 주말에 조부모님을 찾아뵐 예정입니다.","I am going to visit my grandparents this weekend."],["더운 날에는 물을 더 많이 마셔야 합니다.","You should drink more water on hot days."],["이 가방은 내 예전 가방보다 가볍습니다.","This bag is lighter than my old one."],["내일은 아마 비가 올 테니 우산을 챙기세요.","It will probably rain tomorrow, so take an umbrella."],["모든 운전자는 빨간불에서 완전히 멈춰야 합니다.","All drivers must stop completely at a red light."]],
+ [["많은 학생들이 올해 새로운 언어를 배우고 싶어 합니다.","Many students want to learn a new language this year."],["우리 할아버지는 매일 아침 공원에서 산책하는 것을 즐기십니다.","My grandfather enjoys walking in the park every morning."],["내일 비가 오면 우리는 집에서 영화를 볼 것입니다.","If it rains tomorrow, we will watch a movie at home."],["버스가 오지 않아서 나는 학교에 지각했습니다.","I was late for school because the bus didn't come."],["숙제를 끝낸 뒤 나는 어머니의 요리를 도와드렸습니다.","When I finished my homework, I helped my mother cook."]],
+ [["이 오래된 도서관은 우리 동네에서 가장 인기 있는 장소이다.","This old library is the most popular place in our town."],["그 다리는 50여 년 전에 지어졌다.","The bridge was built more than fifty years ago."],["그 상자는 너무 무거워서 아이가 혼자 들 수 없었다.","The box was too heavy for the child to carry alone."],["지난해 그 마을의 오래된 집 여러 채가 수리되었다.","Many old houses in the village were repaired last year."],["이번 달에는 물이 수영하기에 충분히 따뜻하다.","The water is warm enough to swim in this month."]],
+ [["많은 사람들은 걷기가 건강을 지키는 가장 쉬운 방법이라고 생각한다.","Many people think that walking is the easiest way to stay healthy."],["우리 부모님은 그 작은 섬에 벌써 세 번이나 가 보셨다.","My parents have already visited that small island three times."],["강가에 새로 생긴 공원은 저녁에 아름다워 보인다.","The new park by the river looks beautiful in the evening."],["전문가들은 아이들에게 최소 아홉 시간의 수면이 필요하다고 말한다.","Experts say that children need at least nine hours of sleep."],["수프 냄새가 맛있게 나서 모두가 한 그릇 더 먹고 싶어 했다.","The soup smelled delicious, so everyone wanted a second bowl."]],
+ [["우리 가족은 10년 넘게 이 아파트에 살고 있다.","Our family has lived in this apartment for over ten years."],["많은 사람들이 붐비는 시간을 피하려고 일찍 체육관에 간다.","Many people go to the gym early to avoid the crowds."],["채소 가격이 왜 그렇게 갑자기 올랐는지 정확히 아는 사람은 없다.","Nobody knows exactly why the price of vegetables went up so suddenly."],["그 마을은 새 발전소가 문을 연 이후로 태양 에너지를 사용해 왔다.","The town has used solar energy since the new plant opened."],["그녀는 학교에서 쓸 노트북을 사려고 몇 달 동안 돈을 모았다.","She saved money for months to buy a laptop for school."]],
+ [["작년에 우리에게 과학을 가르쳐 주신 선생님은 지금 교장이시다.","The teacher who taught us science last year is now a principal."],["과학자들은 수년 동안 소음이 수면에 미치는 영향을 연구해 왔다.","Scientists have been studying the effects of noise on sleep for years."],["지난달 문을 연 도서관은 벌써 지역 학생들에게 인기가 많다.","The library that opened last month is already popular with local students."],["그 도로는 이번 주말까지 보수 공사로 통제될 예정이다.","The road will be closed for repairs until the end of the week."],["규칙적으로 운동하는 사람들은 대개 잠을 더 잘 자고 낮에 스트레스를 덜 느낀다.","People who exercise regularly usually sleep better and feel less stressed during the day."]],
+ [["웃고 있는 아이들이 버스 창문 너머로 방문객들에게 손을 흔들었다.","The smiling children waved at the visitors from the windows of the bus."],["자유 시간이 더 있다면 나는 기타 치는 법을 배울 것이다.","If I had more free time, I would learn how to play the guitar."],["이곳은 30년 전 우리 부모님이 처음 만나신 작은 카페이다.","This is the small café where my parents first met thirty years ago."],["매일 이른 아침 신선한 생선이 팔리는 그 시장에는 많은 관광객이 찾아온다.","Many tourists visit the market where fresh fish is sold early every morning."],["지난 주말 자원봉사자들은 강을 따라 깨진 병과 버려진 비닐봉지를 주웠다.","Volunteers collected broken bottles and used plastic bags along the river last weekend."]],
+ [["코치는 매 훈련이 시작되기 전에 선수들에게 운동장을 두 바퀴 돌게 했다.","The coach made the players run around the field twice before every practice began."],["중요한 시험을 앞둔 대부분의 학생들에게 정말 필요한 것은 더 많은 공부가 아니라 충분한 잠이다.","What most students really need before an important exam is enough sleep, not more study."],["해변을 따라 걷다가 우리는 돌고래 무리가 물 위로 뛰어오르는 것을 보았다.","Walking along the beach, we saw a group of dolphins jumping out of the water."],["부모님은 내가 열여덟 살이 된 뒤 처음으로 혼자 여행하게 해 주셨다.","My parents let me travel alone for the first time after I turned eighteen."],["근처에 서 있던 우리는 무거운 트럭들이 지나갈 때 오래된 다리가 흔들리는 소리를 들었다.","Standing nearby, we heard the old bridge shake as the heavy trucks passed over it."]],
+ [["우산이 없었던 그녀는 거센 비가 마침내 그칠 때까지 버스 정류장에서 기다렸다.","Having no umbrella with her, she waited at the bus stop until the heavy rain finally stopped."],["소방관들이 현장에 도착했을 때 대부분의 주민들은 이미 건물을 안전하게 빠져나간 뒤였다.","When the firefighters arrived at the scene, most of the residents had already left the building safely."],["우리가 10분만 일찍 집을 나섰더라면 집으로 가는 마지막 기차를 탈 수 있었을 것이다.","If we had left home just ten minutes earlier, we would have caught the last train home."],["시는 강을 따라 새 자전거 도로를 열었고, 덕분에 출퇴근이 훨씬 쉬워졌다.","The city opened a new bike path along the river, which made commuting much easier."],["긴 회의로 지친 팀은 다음 날 아침에 논의를 이어 가기로 했다.","Feeling tired after the long meeting, the team decided to continue the discussion the next morning."]],
+ [["그 작은 바닷가 마을에 올해 봄꽃 축제 때만큼 많은 방문객이 찾아온 적은 없었다.","Never before had the small coastal town seen so many visitors as during this year's spring flower festival."],["그 가족이 위기를 극복하도록 도운 것은 돈이 아니라 이웃들의 도움이었다.","It was not money but the support of their neighbors that helped the family overcome the crisis."],["시가 10년 전에 대중교통에 더 투자했더라면 오늘날 교통이 이렇게 혼잡하지는 않을 것이다.","If the city had invested more in public transportation ten years ago, traffic would not be this heavy today."],["20년 넘게 그 병원에서 일해 온 간호사는 노인 환자들에게 무엇이 필요한지 잘 알고 있었다.","Having worked at the hospital for over twenty years, the nurse understood the needs of elderly patients well."],["규칙적인 운동은 신체 건강을 좋아지게 할 뿐만 아니라 일상의 스트레스와 불안도 줄여 준다.","Not only does regular exercise improve our physical health, but it also helps reduce stress and anxiety in daily life."]],
+ [["청소년의 식습관을 연구한 연구자들은 아침을 자주 거르면 수업 중 집중력에 영향을 줄 수 있다는 사실을 발견했다.","Researchers who studied the eating habits of teenagers found that skipping breakfast, if repeated often, can affect concentration in class."],["최근 조사에 따르면 오늘날 대도시의 젊은 직장인들이 겪는 스트레스의 상당 부분은 치솟는 주거비 때문이다.","Rising housing costs, according to a recent survey, account for much of the stress that young workers in large cities experience today."],["새 정책은 쓰레기를 줄이기 위해 마련되었지만, 규칙을 잘 모르는 많은 주민들은 재활용할 수 있는 물건을 계속 버렸다.","Although the new policy was designed to reduce waste, many residents, unsure of the rules, continued to throw away recyclable items."],["자원봉사자들은 방문객들을 붐비는 거리에서 안내하며 행사의 성공에 기여했는데, 방문객 중 상당수는 노인이었다.","Volunteers contributed to the success of the event by guiding visitors, many of whom were elderly, through the crowded streets."],["미래에 대해 질문을 받았을 때 대부분의 학생들은 높은 연봉보다 안정적인 직장을 찾는 것이 더 중요하다고 답했다.","When asked about the future, most students said that finding a stable job was more important than earning a high salary."]],
+ [["지역 병원을 폐쇄하기로 한 결정은 응급 치료를 받기가 더 어려워질 수 있다고 우려한 주민들의 거센 비판을 받았다.","The decision to close the local hospital was met with strong criticism from residents, who feared that emergency care might become harder to reach."],["기술 덕분에 소통은 그 어느 때보다 빨라졌지만, 일부 전문가들은 그로 인해 의미 있는 대화를 나누는 능력이 약해졌을 수 있다고 주장한다.","While technology has made communication faster than ever, some experts argue that it may have weakened our ability to hold meaningful conversations."],["갑작스러운 식료품 가격 상승이 일시적인 현상인지, 아니면 세계 경제의 더 깊은 문제를 보여 주는 신호인지는 아직 분명하지 않다.","It remains unclear whether the sudden rise in food prices is a temporary trend or a sign of deeper problems in the global economy."],["계단을 이용하거나 집에서 요리하는 것처럼 일상 습관의 작은 변화가 장기적인 건강에 실질적인 차이를 만들 수 있다.","Small changes in daily habits, such as taking the stairs or cooking at home, can make a real difference to long-term health."],["혼자 사는 노인이 점점 늘어나는 점을 고려하면, 정부는 농촌 지역에서 사회 서비스를 제공하는 방식을 다시 생각해야 할지도 모른다.","Given the growing number of elderly people living alone, the government might need to rethink how social services are delivered in rural areas."]]
+];
+const isEnglish = () => L.tts === "en-US";
+function bankPick(lv, isE2K, avoid){
+  if(isE2K && !isEnglish()) return null;
+  const list = BANK[Math.max(0, LV.indexOf(lv))] || BANK[0];
+  const fresh = list.filter(p => !avoid.some(a => a === p[0] || a === p[1]));
+  const p = pickOne(fresh.length ? fresh : list);
+  return isE2K ? p[1] : p[0];
+}
+function showGen(sentence, lv, topic){
+  $("ko").value = sentence; genInfo = {ko: sentence, lv}; fitBox($("ko")); $("en").focus();
+  const all = ghLoad(); all.unshift({lv, d:dir, s:sentence, tp:topic, t:Date.now()}); ghSave(all);
+}
 const aiGen = async () => {
   const lv = curLv();
   if(!sample) return;
   if(!apiKey){ showKeyPop(); return; }
-  $("genSent").disabled = true; $("genSent").textContent = "만드는 중…";
+  const btn = $("genSent");
+  btn.disabled = true; btn.textContent = "만드는 중…";
   clearAll();
   const isE2K = dir === "en2ko", guide = LVL_GUIDE[lv] || lv;
   const hist = ghLoad().filter(x => x.d === dir);
@@ -645,76 +682,48 @@ const aiGen = async () => {
     const used = hist.slice(0, 3).map(x => x.tp), pool = GEN_TOPICS.filter(t => !used.includes(t));
     topic = pickOne(pool.length ? pool : GEN_TOPICS);
   }
-  const lower = getLowerLearned(lv);
-  const lowerNote = lower ? "- 하위 단계에서 배운 내용(" + lower + ")을 자연스럽게 응용해도 좋다.\n" : "";
   const avoid = [];
-  hist.filter(x => x.lv === lv).slice(0, 20).concat(hist.slice(0, 6)).forEach(x => { if(!avoid.includes(x.s)) avoid.push(x.s); });
-  load().slice(0, 4).forEach(x => { if(x.ko && !avoid.includes(x.ko)) avoid.push(x.ko); });
-  const lvN = LV.indexOf(lv) + 1, edu = lvN <= 10;
-  const regEN = edu ? "영어 교과서 본문이나 어린이 영어 독해 지문" : "영어 신문 기사·칼럼과 수능 독해 지문";
-  const regKO = edu ? "교과서 본문처럼 정중하고 반듯한 문장('~합니다', '~입니다', '~했습니다')" : "신문 기사나 칼럼처럼 간결하고 정제된 문어체('~했다', '~이다', '~한다')";
-  const egs = isE2K
-    ? (edu ? '- 좋은 예: "My father reads the newspaper every morning." / "Many students walk to school in spring."' : '- 좋은 예: "More people are choosing to work from home than ever before." / "Experts say that regular exercise can reduce stress."')
-      + '\n - 나쁜 예(속어·억지·뜻 없음·고유명사): "Dude, that movie was totally awesome." / "I am a boy who goes to school." / "We don\'t meet at noon." / "Tom visited Paris with Jane last summer."'
-    : (edu ? '- 좋은 예: "아버지는 매일 아침 신문을 읽으십니다." / "봄에는 많은 학생들이 걸어서 학교에 갑니다."' : '- 좋은 예: "집에서 일하는 사람이 그 어느 때보다 많아지고 있다." / "전문가들은 규칙적인 운동이 스트레스를 줄일 수 있다고 말한다."')
-      + '\n - 나쁜 예(구어체·억지·뜻 없음·번역투·고유명사): "대박, 오늘 날씨 미쳤다." / "나는 학교에 가는 소년이다." / "정오에 만나지 않아요." / "그 사과는 테이블 위에 놓여져 있다." / "민수는 서울역에서 지영이를 만났다."';
-  let sentence = "", note = "", backup = null;
-  const sane = "\n\n[상식·자연스러움 — 반드시 지킬 것]\n- 주어와 서술어가 실제 세계에서 자연스럽게 어울려야 한다. 서로 상관없는 대상을 이어 붙인 문장(나쁜 예: '과학자들은 의사입니다')이나 사전식 억지 문장은 금지한다.\n- 오타, 깨진 글자, 어색한 조사·어미, 앞뒤가 맞지 않는 말이 없어야 한다(나쁜 예: '선생님은 마을에 자전거들 더 탔니다'). 소리 내어 읽었을 때 원어민이 어색해하지 않아야 한다.\n- 문법이 쉬운 단계일수록 내용은 구체적이고 그럴듯해야 한다(좋은 예: 'I have a red ball.' / '아버지는 매일 신문을 읽으십니다.').\n- 단수·복수, 시제, 조사를 정확히 쓴다.\n- 쓰기 전에 문장을 스스로 읽어 보고 어색하면 다른 문장으로 바꾼다.";
+  hist.filter(x => x.lv === lv).slice(0, 10).concat(hist.slice(0, 4)).forEach(x => { if(!avoid.includes(x.s)) avoid.push(x.s); });
+  const lvIdx = Math.max(0, LV.indexOf(lv)), edu = lvIdx < 10;
+  const scene = pickOne(GEN_SCENES[topic] || GEN_SCENES["일상생활"]);
+  const shots = (BANK[lvIdx] || BANK[0]).slice().sort(() => Math.random() - 0.5).slice(0, 3)
+    .map(p => '- "' + p[1] + '" / "' + p[0] + '"').join("\n");
+  const enTarget = isEnglish();
+  const prompt = "너는 한국 " + (edu ? "영어 교과서" : "수능·신문 독해 지문") + " 집필자다. 한국인 학습자의 " + (isE2K ? "해석" : "번역") + " 연습용 문장 3개를 만든다.\n\n"
+    + "[난이도] " + lv + " — " + guide + "\n"
+    + "[주제] " + topic + " / 소재: " + scene + " (3개 모두 서로 다른 내용)\n\n"
+    + "[본보기: 이 단계의 좋은 문장. 이 수준·문체·길이를 그대로 따르되 내용은 새로 쓴다]\n" + (enTarget ? shots : shots.replace(/"[^"]*" \/ /g, "")) + "\n\n"
+    + "[규칙]\n"
+    + "1. " + (edu ? "교과서 본문처럼" : "신문 기사나 칼럼처럼") + " 어법이 정확하고 정제된 문장. 구어체·반말·속어·감탄사 금지.\n"
+    + "2. 주어를 꼭 넣고, 맥락 없이 혼자 읽어도 뜻이 분명하고 의미 있는 정보를 담는다. 나쁜 예: '정오에 만나지 않아요.', '나는 학교에 가는 소년이다.'\n"
+    + "3. 고유명사 금지: 사람 이름, 나라·도시·지명, 회사·브랜드 이름 대신 '친구', '우리 동네', '한 회사'처럼 쓴다.\n"
+    + "4. 한국어는 " + (edu ? "'~합니다/~입니다'체" : "'~했다/~이다'체") + "로, 번역투 없이 매끄럽게. 한국어 안에 외국어·괄호 금지.\n"
+    + "5. 상식에 맞고 원어민이 읽어도 자연스러워야 한다. 숫자·날짜는 꼭 필요할 때만.\n"
+    + (avoid.length ? "6. 아래 문장과 내용·구조가 겹치지 않게:\n" + avoid.slice(0, 10).map(x => "- " + x).join("\n") + "\n" : "")
+    + '\nJSON으로만 답하라:\n{"items":[{"target":"' + L.name + ' 문장","ko":"한국어 문장"},{"target":"","ko":""},{"target":"","ko":""}]}';
+  let sentence = "", fallbackWhy = "";
   try{
-    for(let round = 0; round < 2 && !sentence; round++){
-      const pool = (GEN_SCENES[topic] || GEN_SCENES["일상생활"]).slice().sort(() => Math.random() - 0.5).slice(0, 3);
-      const types = GEN_TYPES.slice().sort(() => Math.random() - 0.5).slice(0, 3);
-      const spec = pool.map((sc, i) => (i + 1) + ") 소재: " + sc + " / 유형: " + types[i]).join("\n");
-      const rules = "[공통 조건]\n- 난이도(" + lv + "): " + guide + "\n- 주제: " + topic + " (소재가 난이도에 비해 어려우면 가장 쉬운 말로 일부만 다룬다)\n" + lowerNote
-        + "\n[문체 기준]\n- " + regEN + "에 실릴 법한 정제된 문장으로 쓴다. 단, 교재나 기사의 실제 문장을 그대로 옮기지 말고 같은 문체로 새로 쓴다.\n- 속어, 유행어, 줄임말, 감탄사, 대화체 반말은 금지한다.\n- 교과서나 신문에 그대로 실려도 될 만큼 어법이 정확하고 반듯해야 한다. 짧은 문장이라도 누가, 무엇을, 왜·언제·어디서 중 필요한 정보가 들어 있어 혼자 읽어도 뜻이 통해야 한다.\n- 주어를 생략하지 않는다. 앞뒤 맥락이 있어야만 이해되는 대화 조각은 금지한다.\n- 고유명사는 쓰지 않는다: 사람 이름(Tom, 민수), 나라·도시·지명(서울, Paris), 회사·브랜드·가게·기관 이름, 실존 사건 모두 금지. 대신 '친구', '동생', '우리 동네', '한 회사', '그 도시'처럼 일반 명사로 쓴다."
-        + (isE2K ? "" : "\n- 한국어는 " + regKO + "로 쓰고, 영어 직역투가 아니라 한국어 문장 자체가 매끄럽게 읽혀야 한다.")
-        + "\n\n[좋은 문장의 기준]\n1. 뜻이 한 번에 이해되고 읽는 사람에게 의미 있는 정보를 주는 완결된 문장 하나. 문법을 보여주려고 억지로 만든 문장이나 내용이 텅 빈 문장(나쁜 예: '정오에 만나지 않아요')은 금지.\n " + egs
-        + "\n2. 위 길이·어휘·문법 범위를 반드시 지키고, 핵심 문법은 문장 속에 자연스럽게 녹인다. 불필요한 숫자·날짜를 넣지 마라.\n3. 번역 정답이 하나로 수렴하도록 모호한 생략, 중의적 표현, 속담·은어는 피한다." + sane
-        + "\n\n[겹치지 않게]\n" + (avoid.length ? "아래 문장들과 소재·문장 구조·핵심 단어가 모두 달라야 한다:\n" + avoid.slice(0, 12).map(x => "- " + x).join("\n") : "처음 만드는 문장이다.") + note;
-      const prompt = isE2K
-        ? "한국인 학습자가 한국어로 해석 연습을 할 " + L.name + " 문장 후보 3개를 만든다. 후보마다 아래 서로 다른 소재·유형을 사용하고, 한국어와 설명은 포함하지 마라.\n" + spec + "\n\n" + rules + '\n\nJSON으로만 답하라:\n{"items":[{"sentence":"' + L.name + ' 문장"},{"sentence":""},{"sentence":""}]}'
-        : "한국인 학습자가 " + L.name + "로 번역 연습을 할 한국어 문장 후보 3개를 만든다. 후보마다 아래 서로 다른 소재·유형을 사용한다.\n" + spec + "\n작업 순서: 후보마다 ① 조건에 맞는 정제된 " + L.name + ' 문장("target")을 먼저 만들고 ② 그 뜻을 정제된 표준 한국어("sentence")로 옮긴다. 구어체와 번역투는 쓰지 마라. 영어에 주어가 있으면 한국어에도 주어(나는, 우리 가족은, 많은 사람들이 등)를 살린다. 한국어 문장에는 외국어와 괄호 설명을 쓰지 마라.\n\n' + rules + '\n\nJSON으로만 답하라:\n{"items":[{"target":"' + L.name + ' 문장","sentence":"한국어 문장"},{"target":"","sentence":""},{"target":"","sentence":""}]}';
-      const r = await sample.json(prompt, null, null, {temperature:0.5});
-      let cand = ((r && Array.isArray(r.items)) ? r.items : (r && r.sentence ? [r] : []))
-        .map(x => ({t: String((x && x.sentence) || "").trim(), tg: String((x && x.target) || "").trim()}))
-        .filter(x => x.t.length >= 4 && x.t.length <= 140 && !/[ㄱ-ㅎㅏ-ㅣ]/.test(x.t) && (isE2K ? !/[가-힣]/.test(x.t) : /[가-힣]/.test(x.t)));
-      if(L.tts === "en-US") cand = cand.filter(x => !hasName(isE2K ? x.t : x.tg));
-      const fresh = cand.filter(x => !avoid.some(a => similar(a, x.t)));
-      cand = fresh.length ? fresh : [];
-      if(!cand.length){ note = "\n[주의] 직전 후보들은 이미 나온 문장과 너무 비슷하거나 형식이 맞지 않았다. 완전히 다른 소재·구조·단어로 만들어라."; continue; }
-      $("genSent").textContent = "검수 중…";
-      let pick = -1, why = "";
-      try{
-        const list = cand.map((x, i) => i + ". " + x.t + (!isE2K && x.tg ? "   (영어 정답: " + x.tg + ")" : "")).join("\n");
-        const jp = "아래는 한국인 학습자에게 보여줄 " + (isE2K ? L.name : "한국어") + " 연습 문장 후보다. 한 문장이라도 어색하면 학습에 해로우므로 엄격하게 심사하라.\n\n[탈락 기준]\n1. 오타, 깨진 글자, 비문, 어색한 조사·어미·띄어쓰기·단수/복수 불일치\n2. 상식에 맞지 않거나 서로 어울리지 않는 주어와 서술어의 결합(예: '과학자들은 의사입니다'), 말은 되지만 실제로는 누구도 하지 않을 억지 문장\n3. 구어체, 번역투, 사전식 억지 문장\n4. 주어가 빠졌거나 앞뒤 맥락 없이는 뜻을 알 수 없는 대화 조각(예: '정오에 만나지 않아요'), 내용이 너무 빈약해 의미가 없는 문장, 교과서나 신문에 실리기 어려운 문장\n5. 사람 이름·지명·회사나 브랜드 이름 같은 고유명사가 들어간 문장\n6. 난이도 범위 위반: " + guide + (isE2K ? "" : "\n7. 영어 정답이 있을 때, 한국어와 뜻이 다르거나 영어 자체가 부자연스러움") + "\n\n[후보]\n" + list + '\n\nJSON으로만 답하라:\n{"verdicts":[{"i":0,"ok":true 또는 false,"score":"1~10 자연스러움 점수(정수)","why":"탈락 이유(통과면 빈 문자열)"}],"best":"통과한 후보 중 가장 정제되고 의미가 분명한 번호(정수). 모두 탈락이면 -1"}';
-        const jr = await sample.json(jp, null, null, {temperature:0});
-        const vs = (jr && Array.isArray(jr.verdicts)) ? jr.verdicts : [];
-        let b = Number(jr && jr.best);
-        if(Number.isInteger(b) && b >= 0 && b < cand.length && !(vs.find(v => Number(v.i) === b && v.ok === false))) pick = b;
-        vs.forEach(v => { const k = Number(v && v.i), sc = Number(v && v.score); if(cand[k] && sc >= 6 && (!backup || sc > backup.sc)) backup = {t: cand[k].t, sc}; });
-        why = vs.filter(v => v && v.ok === false && v.why).map(v => "\"" + (cand[Number(v.i)] ? cand[Number(v.i)].t : "") + "\" → " + v.why).slice(0, 3).join(" / ");
-      }catch(e){
-        if(e && e.message === "nokey") throw e;
-        if(!backup) backup = {t: cand[0].t, sc: 0};
-        if(round === 1) break;
-        continue;
-      }
-      if(pick >= 0){ sentence = cand[pick].t; break; }
-      cand.forEach(x => avoid.unshift(x.t));
-      note = "\n[주의] 직전 후보는 검수에서 탈락했다. 탈락 이유: " + (why || "어색함") + ". 같은 실수를 반복하지 말고, 쉽고 평범하지만 완벽하게 자연스러운 문장으로 다시 만들어라.";
-    }
-    if(!sentence && backup) sentence = backup.t;
-    if(!sentence) throw new Error("nogood");
-    $("ko").value = sentence; genInfo = {ko: sentence, lv}; fitBox($("ko")); $("en").focus();
-    const all = ghLoad(); all.unshift({lv, d:dir, s:sentence, tp:topic, t:Date.now()}); ghSave(all);
+    const r = await sample.json(prompt, null, null, {temperature:0.7, effort:"low", timeout:12000, quick:true});
+    const items = (r && Array.isArray(r.items)) ? r.items : [];
+    const cand = items.map(x => ({ko: String((x && (x.ko || x.sentence)) || "").trim(), tg: String((x && x.target) || "").trim()}))
+      .filter(x => x.ko.length >= 4 && x.ko.length <= 160 && /[가-힣]/.test(x.ko) && !/[ㄱ-ㅎㅏ-ㅣA-Za-z()]/.test(x.ko) && x.tg.length >= 3 && !/[가-힣]/.test(x.tg))
+      .filter(x => !(enTarget && hasName(x.tg)))
+      .map(x => ({...x, t: isE2K ? x.tg : x.ko}))
+      .filter(x => !avoid.some(a => similar(a, x.t)));
+    if(cand.length) sentence = cand[0].t;
+    else fallbackWhy = "AI 문장이 조건에 맞지 않았어요";
   }catch(e){
-    if(!(e && e.message === "nokey")){
-      $("exOut").className = "muted";
-      $("exOut").textContent = (e && e.message === "nogood") ? "마음에 드는 문장을 찾지 못했어요. 한 번 더 눌러 주세요." : (e && e.message === "429") ? "AI 무료 사용 한도에 잠깐 걸렸어요. 1분쯤 뒤에 다시 눌러 주세요." : (e && (e.message === "timeout" || e.message === "503")) ? "AI 서버 응답이 늦어요. 잠시 뒤 다시 눌러 주세요." : "문장을 만들지 못했어요. API 키나 네트워크를 확인하고 다시 눌러 주세요.";
-    }
-  }finally{
-    $("genSent").disabled = false; $("genSent").textContent = "✨ 문장 제시";
+    if(e && e.message === "nokey"){ btn.disabled = false; btn.textContent = "✨ 문장 제시"; return; }
+    const m = e && e.message;
+    fallbackWhy = m === "429" ? "AI 무료 사용 한도에 잠깐 걸렸어요" : (m === "timeout" || m === "503") ? "AI 서버 응답이 늦어요" : m === "network" ? "네트워크 연결이 불안정해요" : "AI 연결 오류(" + (m || "알 수 없음") + ")";
   }
+  if(!sentence){
+    sentence = bankPick(lv, isE2K, avoid);
+    if(sentence){ $("exOut").className = "muted"; $("exOut").textContent = "💡 " + fallbackWhy + ". 대신 준비된 " + lv + " 기본 문장을 보여드려요."; }
+  }
+  if(sentence) showGen(sentence, lv, topic);
+  else { $("exOut").className = "muted"; $("exOut").textContent = fallbackWhy + ". 잠시 뒤 다시 눌러 주세요."; }
+  btn.disabled = false; btn.textContent = "✨ 문장 제시";
 };
 
 /* ---- 실제 문장 가져오기 (위키뉴스 / 쉬운 영어 위키) ---- */
