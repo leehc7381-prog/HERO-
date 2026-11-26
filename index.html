@@ -256,7 +256,7 @@ body.ws main{padding-bottom:190px}
   <button id="genSent" type="button" class="ctl">✨ 문장 제시</button>
 </div>
 <div class="fb ko" id="srcBox"><label for="ko" id="srcLabel">🇰🇷 한국어 문장</label>
-<textarea id="ko" placeholder="예) 나는 어제 친구와 함께 영화를 봤어."></textarea></div>
+<textarea id="ko" placeholder="예) 나는 어제 친구와 함께 영화를 봤어."></textarea><div id="srcCite" class="muted" hidden style="font-size:12px;margin-top:4px"></div></div>
 <div class="fb en" id="enBox"><label for="en" id="enLabel">🇺🇸 내 영어 번역</label>
 <textarea id="en" placeholder="예) I watched a movie with my friend yesterday."></textarea></div>
 <button id="check">검사하고 해설 받기</button>
@@ -323,7 +323,7 @@ body.ws main{padding-bottom:190px}
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 5.3</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 5.4</span><span>Made by 성원 아름</span></div>
 </main>
 
 <div id="keyPop" hidden><div class="pop">
@@ -626,7 +626,7 @@ function similar(a, b){
   y.forEach(v => { ny += v; });
   return nx > 0 && ny > 0 && (2 * inter) / (nx + ny) >= 0.55;
 }
-$("genSent").onclick = async () => {
+const aiGen = async () => {
   const lv = curLv();
   if(!sample) return;
   if(!apiKey){ showKeyPop(); return; }
@@ -705,6 +705,103 @@ $("genSent").onclick = async () => {
   }finally{
     $("genSent").disabled = false; $("genSent").textContent = "✨ 문장 제시";
   }
+};
+
+/* ---- 실제 문장 가져오기 (위키뉴스 / 쉬운 영어 위키) ---- */
+const WIKI = {
+  news: {host: "https://en.wikinews.org", name: "Wikinews", lic: "CC BY 2.5"},
+  simple: {host: "https://simple.wikipedia.org", name: "Simple English Wikipedia", lic: "CC BY-SA 4.0"}
+};
+const wikiPool = {news: [], simple: []};
+async function wikiGet(host, params){
+  const ctl = new AbortController(), tm = setTimeout(() => ctl.abort(), 6000);
+  try{
+    const q = new URLSearchParams(Object.assign({action:"query", format:"json", origin:"*", prop:"extracts", explaintext:"1", exintro:"1", exlimit:"max"}, params));
+    const res = await fetch(host + "/w/api.php?" + q.toString(), {signal: ctl.signal});
+    if(!res.ok) throw new Error("http");
+    const j = await res.json();
+    return Object.values((j && j.query && j.query.pages) || {});
+  }finally{ clearTimeout(tm); }
+}
+function splitSentences(text){
+  return String(text || "").replace(/\s+/g, " ").replace(/\b(Mr|Mrs|Ms|Dr|St|U\.S|U\.K|Jr|Sr|No|Inc|Corp|Ltd)\./g, "$1§").match(/[^.!?]+[.!?]+(?=\s|$)/g) || [];
+}
+function goodSentence(raw, idx, kind){
+  const t = raw.replace(/§/g, ".").trim();
+  if(!/^[A-Z“"]/.test(t) || !/[.]["”]?$/.test(t)) return null;
+  if(/[()\[\];:@#<>=|\/\\]|\d{3,}|https?:/.test(t)) return null;
+  if(/^(He|She|It|They|This|These|Those|His|Her|Its|Their|However|But|And|Also|Then|Later|Therefore)\b/.test(t)) return null;
+  const words = t.split(/\s+/).length, w = LVL[idx].w;
+  if(words < (kind === "news" ? w[0] - 2 : w[0]) || words > (kind === "news" ? w[1] + 5 : w[1])) return null;
+  const lens = t.replace(/[^A-Za-z\s'-]/g, "").split(/\s+/).map(x => x.length);
+  const avg = lens.reduce((a, b) => a + b, 0) / lens.length, mx = Math.max.apply(null, lens);
+  if(idx < 5 && (mx > 9 || avg > 5.2)) return null;
+  if(idx < 10 && (mx > 12 || avg > 5.8)) return null;
+  if(kind === "news" && /["“”]/.test(t)) return null;
+  return t;
+}
+async function wikiLoad(kind){
+  if(kind === "news"){
+    const cm = await wikiGet(WIKI.news.host, {generator:"categorymembers", gcmtitle:"Category:Published", gcmsort:"timestamp", gcmdir:"desc", gcmlimit:"40", gcmnamespace:"0"});
+    return cm.filter(p => p.extract).map(p => ({title: p.title, pid: p.pageid, text: p.extract}));
+  }
+  const pg = await wikiGet(WIKI.simple.host, {generator:"random", grnnamespace:"0", grnlimit:"20"});
+  return pg.filter(p => p.extract).map(p => ({title: p.title, pid: p.pageid, text: p.extract}));
+}
+async function realSentence(lv, avoid){
+  const idx = Math.max(0, LV.indexOf(lv)), kind = idx >= 10 ? "news" : "simple";
+  for(let attempt = 0; attempt < 3; attempt++){
+    const pool = wikiPool[kind];
+    // 풀에서 먼저 찾기
+    const ok = pool.map((c, i) => ({c, i})).filter(x => x.c.idx === idx && !avoid.some(a => similar(a, x.c.t)));
+    if(ok.length){ const k = pickOne(ok); pool.splice(k.i, 1); return {text: k.c.t, title: k.c.title, kind}; }
+    const pages = await wikiLoad(kind);
+    if(!pages.length) throw new Error("empty");
+    pages.forEach(pgx => {
+      splitSentences(pgx.text).slice(0, kind === "news" ? 3 : 8).forEach(sx => {
+        for(let i = 0; i < 20; i++){
+          const g = goodSentence(sx, i, kind);
+          if(g) pool.push({t: g, title: pgx.title, idx: i});
+        }
+      });
+    });
+    if(pool.length > 600) pool.length = 600;
+  }
+  throw new Error("nomatch");
+}
+async function translateKo(en){
+  const r = await sample.json('다음 영어 문장을 한국어 학습자가 읽을 자연스럽고 정제된 표준 한국어 문장 하나로 번역하라. 신문·교과서처럼 반듯한 문체(~했다, ~입니다)로 쓰고 설명은 붙이지 마라.\n\n"' + en + '"\n\nJSON으로만 답하라: {"ko":"한국어 번역"}', null, null, {temperature:0});
+  const ko = String((r && r.ko) || "").trim();
+  if(ko.length < 4 || ko.length > 160 || !/[가-힣]/.test(ko) || /[ㄱ-ㅎㅏ-ㅣ]/.test(ko)) throw new Error("badko");
+  return ko;
+}
+$("genSent").onclick = async () => {
+  const lv = curLv();
+  if(!sample) return;
+  if(!apiKey){ showKeyPop(); return; }
+  // 영어만 위키 문장 사용, 그 외 언어 또는 실패 시 AI 생성
+  if(L.ek === "es"){
+    const btn = $("genSent"); btn.disabled = true; btn.textContent = "가져오는 중…";
+    try{
+      const hist = ghLoad(), avoid = hist.slice(0, 60).map(x => x.s).concat(hist.slice(0, 60).map(x => x.en || "").filter(Boolean));
+      const real = await realSentence(lv, avoid);
+      const isE2K = dir === "en2ko";
+      let shown = real.text;
+      if(!isE2K){ btn.textContent = "번역 중…"; shown = await translateKo(real.text); }
+      clearAll();
+      $("ko").value = shown; genInfo = {ko: shown, lv}; fitBox($("ko"));
+      const sc = $("srcCite"), w = WIKI[real.kind];
+      sc.textContent = "📰 출처: " + w.name + " · “" + real.title + "” (" + w.lic + ")"; sc.hidden = false;
+      $("en").focus();
+      const all = ghLoad(); all.unshift({lv, d:dir, s:shown, en:real.text, tp:"wiki", t:Date.now()}); ghSave(all);
+      btn.disabled = false; btn.textContent = "✨ 문장 제시";
+      return;
+    }catch(e){
+      btn.disabled = false; btn.textContent = "✨ 문장 제시";
+      if(e && e.message === "nokey") return;
+    }
+  }
+  return aiGen();
 };
 
 /* ---- 해설 표시 ---- */
@@ -871,7 +968,7 @@ $("check").onclick = async () => {
 };
 
 $("reveal").onclick = () => { if(!cur) return; cur.revealed = true; $("reveal").hidden = true; showAnswer(); saveCur(); rewrapAll(); };
-const clearAll = () => { cur = null; openedId = null; renderQA(); $("ansIdle").hidden = false; $("listenIdle").hidden = false; $("listenGenRow").hidden = true; $("speakRow").hidden = true; $("speakMsg").textContent = ""; if(window.speechSynthesis) speechSynthesis.cancel(); $("ko").value=""; $("en").value=""; $("retry").value=""; $("reOut").textContent=""; $("retrySrc").hidden=true; $("retrySrcText").textContent=""; fitAllBoxes(); $("ansOut").replaceChildren(); $("reveal").hidden=true; $("recheck").disabled=true; $("exOut").className="muted"; $("exOut").textContent="검사하기를 누르면 여기에 해설이 나와요."; };
+const clearAll = () => { if($("srcCite")) $("srcCite").hidden = true; cur = null; openedId = null; renderQA(); $("ansIdle").hidden = false; $("listenIdle").hidden = false; $("listenGenRow").hidden = true; $("speakRow").hidden = true; $("speakMsg").textContent = ""; if(window.speechSynthesis) speechSynthesis.cancel(); $("ko").value=""; $("en").value=""; $("retry").value=""; $("reOut").textContent=""; $("retrySrc").hidden=true; $("retrySrcText").textContent=""; fitAllBoxes(); $("ansOut").replaceChildren(); $("reveal").hidden=true; $("recheck").disabled=true; $("exOut").className="muted"; $("exOut").textContent="검사하기를 누르면 여기에 해설이 나와요."; };
 
 /* ---- 질문란 ---- */
 function renderQA(){
