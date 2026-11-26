@@ -141,9 +141,32 @@ body.ws main{padding-bottom:190px}
 .score .sd{font-size:12.5px;color:var(--sub);margin-left:8px}
 .meter{height:8px;border-radius:99px;background:var(--line);overflow:hidden;margin:4px 0 2px}
 .meter>i{display:block;height:100%;border-radius:99px;background:var(--c)}
-#lvInfo{margin:0 0 12px;font-size:13px}
-#lvInfo .lvrow{padding:3px 0;border-top:1px solid var(--line)}
-#lvInfo .lvrow.me{font-weight:700;color:var(--acc)}
+#lvInfo{margin:0 0 12px;font-size:13.5px}
+#lvInfo .gname{font-size:15px;margin-bottom:8px}
+.ls{display:flex;gap:10px;align-items:flex-start;padding:8px 0;border-top:1px solid var(--line)}
+.lsn{flex:0 0 22px;height:22px;border-radius:50%;background:var(--acc);color:var(--accink);font-size:12px;font-weight:800;display:flex;align-items:center;justify-content:center;margin-top:1px}
+.lsb{flex:1;min-width:0}
+.lst{font-weight:700}
+.lsd{color:var(--sub);font-size:12.5px;margin-top:2px;line-height:1.5}
+#lvInfo>.lsd{margin-top:8px}
+.lsg,.lsr{display:grid;grid-template-columns:repeat(auto-fit,minmax(96px,1fr));gap:6px;margin-top:6px}
+.lsr{margin:8px 0 2px;padding-top:8px;border-top:1px solid var(--line);grid-template-columns:1fr 1fr}
+.lsc{border:1px solid var(--line);border-radius:10px;padding:6px 8px;display:flex;flex-direction:column;gap:2px;font-size:12px}
+.lsc b{font-size:12px}
+.lsc span{color:var(--sub)}
+.lsc.up{border-color:var(--ok)}.lsc.down{border-color:var(--bad)}
+.lsr .lsc span{line-height:1.4}
+#lvNotes{margin:0 0 12px}
+.nnav{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.nbtn{flex:0 0 44px;width:44px;height:44px;margin:0;padding:0;border-radius:12px;font-size:26px;line-height:1;display:flex;align-items:center;justify-content:center;background:var(--card);border:1px solid var(--line);color:var(--acc)}
+.nbtn:disabled{opacity:.3}
+.ntitle{flex:1;text-align:center;min-width:0}
+.nlv{font-size:18px;font-weight:800}
+.nsub{font-size:12.5px;color:var(--sub);margin-top:2px}
+.npg{font-size:11.5px;color:var(--sub);margin-top:2px}
+.ngm{padding:10px 0;border-top:1px solid var(--line)}
+.ngm .gname{font-size:14.5px;margin-bottom:3px}
+.ngd{font-size:13.5px;line-height:1.6}
 #lvPop,#keyPop{position:fixed;inset:0;z-index:100;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;padding:20px}
 .pop{background:var(--card);border-radius:18px;padding:22px 20px;max-width:340px;width:100%;text-align:center}
 .pop .pe{font-size:54px;line-height:1.1;animation:pb .7s ease-in-out infinite alternate}
@@ -300,7 +323,7 @@ body.ws main{padding-bottom:190px}
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 5.1</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 5.2</span><span>Made by 성원 아름</span></div>
 </main>
 
 <div id="keyPop" hidden><div class="pop">
@@ -903,23 +926,45 @@ function renderNotes(){
   const b = $("lvNotes"); b.replaceChildren();
   if(LC !== "en"){ b.appendChild(el("div", "문법 노트는 영어(🇺🇸) 레벨만 준비돼 있어요.", "muted")); return; }
   const x = LVL[noteIdx];
-  const nav = el("div", null, "srow"); nav.style.justifyContent = "space-between";
-  const pv = el("button", "‹", "ctl"); pv.disabled = noteIdx === 0; pv.onclick = () => { noteIdx--; renderNotes(); };
-  const nx = el("button", "›", "ctl"); nx.disabled = noteIdx === LVL.length - 1; nx.onclick = () => { noteIdx++; renderNotes(); };
-  const t = el("div"); t.style.textAlign = "center";
-  t.appendChild(el("div", x.l + (x.l === prog.my ? " · 내 레벨" : ""), "gname")); t.appendChild(el("div", LVD[noteIdx], "muted"));
+  const nav = el("div", null, "nnav");
+  const pv = el("button", "‹", "nbtn"); pv.setAttribute("aria-label", "이전 레벨"); pv.disabled = noteIdx === 0; pv.onclick = () => { noteIdx--; renderNotes(); };
+  const nx = el("button", "›", "nbtn"); nx.setAttribute("aria-label", "다음 레벨"); nx.disabled = noteIdx === LVL.length - 1; nx.onclick = () => { noteIdx++; renderNotes(); };
+  const t = el("div", null, "ntitle");
+  t.appendChild(el("div", x.l, "nlv"));
+  t.appendChild(el("div", x.s + (x.l === prog.my ? " · 내 레벨 🏅" : ""), "nsub"));
+  t.appendChild(el("div", (noteIdx + 1) + " / " + LVL.length, "npg"));
   nav.append(pv, t, nx); b.appendChild(nav);
   x.g.forEach((g, i) => {
-    const bx = el("div", null, "gbox"), ex = g[2].split(" / ");
-    bx.appendChild(el("div", (i + 1) + ". " + g[0], "gname")); bx.appendChild(el("div", g[1]));
-    bx.appendChild(el("div", ex[0])); bx.appendChild(el("div", ex[1] || "", "muted")); b.appendChild(bx);
+    const bx = el("div", null, "ngm");
+    bx.appendChild(el("div", (i + 1) + ". " + g[0], "gname")); bx.appendChild(el("div", g[1], "ngd")); b.appendChild(bx);
   });
-  wrapWords(b);
 }
 function renderLvInfo(){
   const b = $("lvInfo"); b.replaceChildren();
-  b.appendChild(el("div", "내 레벨 단계에서 20문장을 풀면 최근 20문장 평균으로 심사해요. 80점 이상이면 승급전, 60점 이하면 강등방어전이 열리고, 60~80점이면 계속 학습하며 문장마다 다시 심사해요. 경기는 5문장이에요. 승급전은 80점 이상이 3문장이면 승급, 방어전은 60점 이하가 3문장이면 강등이에요. 3문장이 먼저 결정되면 바로 끝나요.", "muted"));
-  LV.forEach((l, i) => b.appendChild(el("div", (l === prog.my ? "👉 " : "") + l + " — " + LVD[i], "lvrow" + (l === prog.my ? " me" : ""))));
+  b.appendChild(el("div", "🏅 레벨 시스템", "gname"));
+  const steps = [
+    ["1", "20문장 풀기", "내 레벨 문장을 20개 풀면 최근 20문장 평균 점수로 심사해요."],
+    ["2", "평균 점수 심사", null],
+    ["3", "5문장 경기", "경기는 5문장이며, 3문장이 먼저 결정되면 바로 끝나요."]
+  ];
+  steps.forEach(st => {
+    const row = el("div", null, "ls"), num = el("div", st[0], "lsn"), body = el("div", null, "lsb");
+    body.appendChild(el("div", st[1], "lst"));
+    if(st[2]) body.appendChild(el("div", st[2], "lsd"));
+    else {
+      const t = el("div", null, "lsg");
+      [["80점 이상", "⚔️ 승급전", "up"], ["60~80점", "계속 학습", "mid"], ["60점 이하", "🛡️ 강등방어전", "down"]].forEach(c => {
+        const x = el("div", null, "lsc " + c[2]); x.appendChild(el("b", c[0])); x.appendChild(el("span", c[1])); t.appendChild(x);
+      });
+      body.appendChild(t);
+    }
+    row.append(num, body); b.appendChild(row);
+  });
+  const res = el("div", null, "lsr");
+  const u = el("div", null, "lsc up"); u.appendChild(el("b", "⚔️ 승급전")); u.appendChild(el("span", "80점 이상 3문장이면 승급"));
+  const d = el("div", null, "lsc down"); d.appendChild(el("b", "🛡️ 방어전")); d.appendChild(el("span", "60점 이하 3문장이면 강등"));
+  res.append(u, d); b.appendChild(res);
+  b.appendChild(el("div", "레벨이 바뀌면 문장 화면과 20문장 기록이 새로 시작돼요.", "lsd"));
 }
 const mPass = m => m.res.filter(x => m.type === "up" ? x >= 80 : x > 60).length;
 const mIcon = (m, sc) => sc === undefined ? "⬜" : ((m.type === "up" ? sc >= 80 : sc > 60) ? "✅" : "❌");
