@@ -323,7 +323,7 @@ body.ws main{padding-bottom:190px}
 <p class="muted" style="margin:8px 0 0;font-size:12px">기록은 이 기기의 브라우저에 저장돼요.</p>
 </details>
 
-<div class="ver"><span>Version 5.2</span><span>Made by 성원 아름</span></div>
+<div class="ver"><span>Version 5.3</span><span>Made by 성원 아름</span></div>
 </main>
 
 <div id="keyPop" hidden><div class="pop">
@@ -376,7 +376,7 @@ async function verifyKey(){
   const res = await fetch(GBASE + "models", {headers:{"Authorization":"Bearer " + apiKey}});
   if(!res.ok) throw new Error(res.status);
 }
-async function callGroq(prompt, onStream, onStatus){
+async function callGroq(prompt, onStream, onStatus, opts){
   if(!apiKey){ showKeyPop(); throw new Error("nokey"); }
   if(!PRESET_MODELS.has(model)){ model = DEFAULT_MODEL; refreshKeyUI(); }
   const post = (m, extra, signal) => fetch(GBASE + "chat/completions", {
@@ -387,7 +387,7 @@ async function callGroq(prompt, onStream, onStatus){
       messages: [{role:"user", content:prompt}],
       response_format: {type:"json_object"},
       stream: !!onStream
-    }, extra))
+    }, extra, (opts && typeof opts.temperature === "number") ? {temperature: opts.temperature} : {}))
   });
   const cfgs = [{reasoning_effort:"medium"}, {}];
   const tryModels = [model, ...ALL_MODELS.filter(m => m !== model)];
@@ -612,7 +612,6 @@ const GEN_SCENES = {
   "시사·사회":["기후 변화와 환경 정책","인공지능과 기술 발전","도시와 지역 사회 문제","교육 제도의 변화","경제와 물가 소식","봉사활동과 공동체"]
 };
 const GEN_TYPES = ["사실 설명","원인과 결과","비교와 대조","경험이나 일화","계획이나 전망","의견 제시","조건이나 가정","발표나 보도(~라고 밝혔다)","변화나 추세","권고나 당부"];
-const GEN_SUBJ = ["학생들","시민들","과학자들","정부","우리 가족","한 연구팀","선생님","많은 사람들","이 도시","한 회사","나","우리"];
 const pickOne = a => a[Math.floor(Math.random() * a.length)];
 const ghLoad = () => { try{ return JSON.parse(localStorage.getItem(L.ek + ":genhist")) || []; }catch(e){ return []; } };
 const ghSave = a => { try{ localStorage.setItem(L.ek + ":genhist", JSON.stringify(a.slice(0, 150))); }catch(e){} };
@@ -654,36 +653,54 @@ $("genSent").onclick = async () => {
       + '\n - 나쁜 예(속어·억지·사전식): "Dude, that movie was totally awesome." / "I am a boy who goes to school."'
     : (edu ? '- 좋은 예: "봄이 오면 많은 사람들이 공원에서 산책을 합니다." / "우리 가족은 주말마다 도서관에 갑니다."' : '- 좋은 예: "정부는 다음 달부터 새로운 교통 정책을 시행한다고 밝혔다." / "시는 교통 혼잡을 줄이기 위해 자전거 도로를 늘릴 계획이다."')
       + '\n - 나쁜 예(구어체·억지·번역투): "대박, 오늘 날씨 미쳤다." / "나는 학교에 가는 소년이다." / "그 사과는 테이블 위에 놓여져 있다."';
-  let sentence = "", fallback = "", note = "";
+  let sentence = "", note = "";
+  const sane = "\n\n[상식·자연스러움 — 반드시 지킬 것]\n- 주어와 서술어가 실제 세계에서 자연스럽게 어울려야 한다. 서로 상관없는 대상을 이어 붙인 문장(나쁜 예: '과학자들은 의사입니다')이나 사전식 억지 문장은 금지한다.\n- 오타, 깨진 글자, 어색한 조사·어미, 앞뒤가 맞지 않는 말이 없어야 한다(나쁜 예: '선생님은 마을에 자전거들 더 탔니다'). 소리 내어 읽었을 때 원어민이 어색해하지 않아야 한다.\n- 문법이 쉬운 단계일수록 내용은 구체적이고 그럴듯해야 한다(좋은 예: 'I have a red ball.' / '아버지는 매일 신문을 읽으십니다.').\n- 단수·복수, 시제, 조사를 정확히 쓴다.\n- 쓰기 전에 문장을 스스로 읽어 보고 어색하면 다른 문장으로 바꾼다.";
   try{
-    for(let n = 0; n < 3; n++){
-      const scene = pickOne(GEN_SCENES[topic] || GEN_SCENES["일상생활"]), type = pickOne(GEN_TYPES), subj = pickOne(GEN_SUBJ);
-      const rules = "[이번 문장의 조건]\n- 난이도(" + lv + "): " + guide + "\n- 주제: " + topic + " / 소재: " + scene + " (소재가 난이도에 비해 어려우면 가장 쉬운 말로 일부만 다룬다)\n- 문장 유형(가능하면): " + type + " / 주어 후보: " + subj + "\n" + lowerNote
+    for(let round = 0; round < 2 && !sentence; round++){
+      const pool = (GEN_SCENES[topic] || GEN_SCENES["일상생활"]).slice().sort(() => Math.random() - 0.5).slice(0, 3);
+      const types = GEN_TYPES.slice().sort(() => Math.random() - 0.5).slice(0, 3);
+      const spec = pool.map((sc, i) => (i + 1) + ") 소재: " + sc + " / 유형: " + types[i]).join("\n");
+      const rules = "[공통 조건]\n- 난이도(" + lv + "): " + guide + "\n- 주제: " + topic + " (소재가 난이도에 비해 어려우면 가장 쉬운 말로 일부만 다룬다)\n" + lowerNote
         + "\n[문체 기준]\n- " + regEN + "에 실릴 법한 정제된 문장으로 쓴다. 단, 교재나 기사의 실제 문장을 그대로 옮기지 말고 같은 문체로 새로 쓴다.\n- 속어, 유행어, 줄임말, 감탄사, 대화체 반말은 금지한다. 실존 인물·기업·사건의 이름은 쓰지 말고 '정부', '한 연구팀', '이 도시'처럼 일반화한다."
         + (isE2K ? "" : "\n- 한국어는 " + regKO + "로 쓰고, 영어 직역투가 아니라 한국어 문장 자체가 매끄럽게 읽혀야 한다.")
-        + "\n\n[좋은 문장의 기준]\n1. 뜻이 한 번에 이해되는 완결된 문장 하나. 문법을 보여주려고 억지로 만든 문장, 사전 예문 같은 문장은 금지.\n " + egs
-        + "\n2. 위 길이·어휘·문법 범위를 반드시 지키고, 핵심 문법은 문장 속에 자연스럽게 녹인다. 불필요한 숫자·날짜를 넣지 마라.\n3. 번역 정답이 하나로 수렴하도록 모호한 생략, 중의적 표현, 속담·은어는 피한다."
+        + "\n\n[좋은 문장의 기준]\n1. 뜻이 한 번에 이해되는 완결된 문장 하나. 문법을 보여주려고 억지로 만든 문장은 금지.\n " + egs
+        + "\n2. 위 길이·어휘·문법 범위를 반드시 지키고, 핵심 문법은 문장 속에 자연스럽게 녹인다. 불필요한 숫자·날짜를 넣지 마라.\n3. 번역 정답이 하나로 수렴하도록 모호한 생략, 중의적 표현, 속담·은어는 피한다." + sane
         + "\n\n[겹치지 않게]\n" + (avoid.length ? "아래 문장들과 소재·문장 구조·핵심 단어가 모두 달라야 한다:\n" + avoid.slice(0, 26).map(x => "- " + x).join("\n") : "처음 만드는 문장이다.") + note;
       const prompt = isE2K
-        ? "한국인 학습자가 한국어로 해석 연습을 할 " + L.name + " 문장 1개를 만든다. 교재·뉴스 문체의 정제된 문장이어야 하며, 한국어와 설명은 포함하지 마라.\n\n" + rules + '\n\nJSON으로만 답하라:\n{"sentence":"' + L.name + ' 문장 1개"}'
-        : "한국인 학습자가 " + L.name + "로 번역 연습을 할 한국어 문장을 만든다.\n작업 순서: ① 아래 조건에 맞는 정제된 " + L.name + ' 문장("target")을 먼저 만든다. ② 그 뜻을 정제된 표준 한국어("sentence")로 옮긴다. 구어체와 번역투는 쓰지 마라. 한국어 문장에는 외국어와 괄호 설명을 쓰지 마라.\n\n' + rules + '\n\nJSON으로만 답하라:\n{"target":"' + L.name + ' 문장","sentence":"정제된 표준 한국어 문장 1개"}';
-      const r = await sample.json(prompt);
-      const t = String((r && r.sentence) || "").trim();
-      if(!t) continue;
-      const langOk = isE2K ? !/[가-힣]/.test(t) : /[가-힣]/.test(t), dup = avoid.some(a => similar(a, t));
-      if(langOk && !dup){ sentence = t; break; }
-      if(langOk && !fallback) fallback = t;
-      avoid.unshift(t);
-      note = '\n[주의] 직전 시도 "' + t + '"는 ' + (langOk ? "이미 나온 문장과 너무 비슷했다" : "언어 조건에 맞지 않았다") + ". 완전히 다른 소재·구조·단어로 다시 만들어라.";
+        ? "한국인 학습자가 한국어로 해석 연습을 할 " + L.name + " 문장 후보 3개를 만든다. 후보마다 아래 서로 다른 소재·유형을 사용하고, 한국어와 설명은 포함하지 마라.\n" + spec + "\n\n" + rules + '\n\nJSON으로만 답하라:\n{"items":[{"sentence":"' + L.name + ' 문장"},{"sentence":""},{"sentence":""}]}'
+        : "한국인 학습자가 " + L.name + "로 번역 연습을 할 한국어 문장 후보 3개를 만든다. 후보마다 아래 서로 다른 소재·유형을 사용한다.\n" + spec + "\n작업 순서: 후보마다 ① 조건에 맞는 정제된 " + L.name + ' 문장("target")을 먼저 만들고 ② 그 뜻을 정제된 표준 한국어("sentence")로 옮긴다. 구어체와 번역투는 쓰지 마라. 한국어 문장에는 외국어와 괄호 설명을 쓰지 마라.\n\n' + rules + '\n\nJSON으로만 답하라:\n{"items":[{"target":"' + L.name + ' 문장","sentence":"한국어 문장"},{"target":"","sentence":""},{"target":"","sentence":""}]}';
+      const r = await sample.json(prompt, null, null, {temperature:0.6});
+      let cand = ((r && Array.isArray(r.items)) ? r.items : (r && r.sentence ? [r] : []))
+        .map(x => ({t: String((x && x.sentence) || "").trim(), tg: String((x && x.target) || "").trim()}))
+        .filter(x => x.t.length >= 4 && x.t.length <= 140 && !/[ㄱ-ㅎㅏ-ㅣ]/.test(x.t) && (isE2K ? !/[가-힣]/.test(x.t) : /[가-힣]/.test(x.t)));
+      const fresh = cand.filter(x => !avoid.some(a => similar(a, x.t)));
+      cand = fresh.length ? fresh : [];
+      if(!cand.length){ note = "\n[주의] 직전 후보들은 이미 나온 문장과 너무 비슷하거나 형식이 맞지 않았다. 완전히 다른 소재·구조·단어로 만들어라."; continue; }
+      $("genSent").textContent = "검수 중…";
+      let pick = -1, why = "";
+      try{
+        const list = cand.map((x, i) => i + ". " + x.t + (!isE2K && x.tg ? "   (영어 정답: " + x.tg + ")" : "")).join("\n");
+        const jp = "아래는 한국인 학습자에게 보여줄 " + (isE2K ? L.name : "한국어") + " 연습 문장 후보다. 한 문장이라도 어색하면 학습에 해로우므로 엄격하게 심사하라.\n\n[탈락 기준]\n1. 오타, 깨진 글자, 비문, 어색한 조사·어미·띄어쓰기·단수/복수 불일치\n2. 상식에 맞지 않거나 서로 어울리지 않는 주어와 서술어의 결합(예: '과학자들은 의사입니다'), 말은 되지만 실제로는 누구도 하지 않을 억지 문장\n3. 구어체, 번역투, 사전식 억지 문장\n4. 난이도 범위 위반: " + guide + (isE2K ? "" : "\n5. 영어 정답이 있을 때, 한국어와 뜻이 다르거나 영어 자체가 부자연스러움") + "\n\n[후보]\n" + list + '\n\nJSON으로만 답하라:\n{"verdicts":[{"i":0,"ok":true 또는 false,"why":"탈락 이유(통과면 빈 문자열)"}],"best":"통과한 후보 중 가장 자연스러운 번호(정수). 모두 탈락이면 -1"}';
+        const jr = await sample.json(jp, null, null, {temperature:0});
+        const vs = (jr && Array.isArray(jr.verdicts)) ? jr.verdicts : [];
+        let b = Number(jr && jr.best);
+        if(Number.isInteger(b) && b >= 0 && b < cand.length && !(vs.find(v => Number(v.i) === b && v.ok === false))) pick = b;
+        why = vs.filter(v => v && v.ok === false && v.why).map(v => "\"" + (cand[Number(v.i)] ? cand[Number(v.i)].t : "") + "\" → " + v.why).slice(0, 3).join(" / ");
+      }catch(e){
+        if(e && e.message === "nokey") throw e;
+        throw new Error("judgefail");
+      }
+      if(pick >= 0){ sentence = cand[pick].t; break; }
+      cand.forEach(x => avoid.unshift(x.t));
+      note = "\n[주의] 직전 후보는 검수에서 탈락했다. 탈락 이유: " + (why || "어색함") + ". 같은 실수를 반복하지 말고, 쉽고 평범하지만 완벽하게 자연스러운 문장으로 다시 만들어라.";
     }
-    sentence = sentence || fallback;
-    if(!sentence) throw new Error("empty");
+    if(!sentence) throw new Error("nogood");
     $("ko").value = sentence; genInfo = {ko: sentence, lv}; fitBox($("ko")); $("en").focus();
     const all = ghLoad(); all.unshift({lv, d:dir, s:sentence, tp:topic, t:Date.now()}); ghSave(all);
   }catch(e){
     if(!(e && e.message === "nokey")){
       $("exOut").className = "muted";
-      $("exOut").textContent = "문장을 만들지 못했어요. API 키나 네트워크를 확인하고 다시 눌러 주세요.";
+      $("exOut").textContent = (e && e.message === "nogood") ? "마음에 드는 문장을 찾지 못했어요. 한 번 더 눌러 주세요." : (e && e.message === "judgefail") ? "문장을 검수하다 오류가 났어요. 잠시 뒤 다시 눌러 주세요." : "문장을 만들지 못했어요. API 키나 네트워크를 확인하고 다시 눌러 주세요.";
     }
   }finally{
     $("genSent").disabled = false; $("genSent").textContent = "✨ 문장 제시";
